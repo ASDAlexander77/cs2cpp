@@ -8,7 +8,7 @@ namespace CoreLib { namespace System { namespace Runtime { namespace CompilerSer
     }
     
     // Method : System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(System.RuntimeTypeHandle)
-    void RuntimeHelpers::RunClassConstructor(CoreLib::System::RuntimeTypeHandle type)
+    void RuntimeHelpers::RunClassConstructor(::CoreLib::System::RuntimeTypeHandle type)
     {
         throw 0xC000C000;
     }

@@ -186,16 +186,16 @@ namespace Il2Native.Logic.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to // TypedReference
-        ///template &lt;typename T&gt; inline CoreLib::System::TypedReference __makeref(T* t)
+        ///template &lt;typename T&gt; inline ::CoreLib::System::TypedReference __makeref(T* t)
         ///{
-        ///	CoreLib::System::TypedReference __MakeRef;
-        ///	__MakeRef = __init&lt;CoreLib::System::TypedReference&gt;();
-        ///	__MakeRef.Value = __init&lt;CoreLib::System::IntPtr&gt;((void*)t);
-        ///	__MakeRef.Type = __init&lt;CoreLib::System::IntPtr&gt;((void*)_typeMT&lt;T&gt;());
+        ///	::CoreLib::System::TypedReference __MakeRef;
+        ///	__MakeRef = __init&lt;::CoreLib::System::TypedReference&gt;();
+        ///	__MakeRef.Value = __init&lt;::CoreLib::System::IntPtr&gt;((void*)t);
+        ///	__MakeRef.Type = __init&lt;::CoreLib::System::IntPtr&gt;((void*)_typeMT&lt;T&gt;());
         ///	return __MakeRef;
         ///}
         ///
-        ///template &lt;typename T&gt; inline T&amp; __refvalue(CoreLib::System::TypedReference tr)
+        ///template &lt;typename T&gt; inline T&amp; __refvalue(::CoreLib::System::TypedReference tr)
         ///{
         ///	return (T&amp;)*(T*)((void*)tr.Value);
         ///}
@@ -283,14 +283,14 @@ namespace Il2Native.Logic.Properties {
         /// <summary>
         ///   Looks up a localized string similar to #ifdef _MSC_VER
         ///
-        ///CoreLib::System::IntPtr _interlocked_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value)
+        ///::CoreLib::System::IntPtr _interlocked_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value)
         ///{
-        ///	return __init&lt;CoreLib::System::IntPtr&gt;(InterlockedExchangePointer((void* volatile*)&amp;location1-&gt;m_value, value.m_value));
+        ///	return __init&lt;::CoreLib::System::IntPtr&gt;(InterlockedExchangePointer((void* volatile*)&amp;location1-&gt;m_value, value.m_value));
         ///}
         ///
-        ///CoreLib::System::IntPtr _interlocked_compare_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value, CoreLib::System::IntPtr comparand)
+        ///::CoreLib::System::IntPtr _interlocked_compare_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value, ::CoreLib::System::IntPtr comparand)
         ///{
-        ///	return __init&lt;CoreLib::System::IntPtr&gt;(InterlockedCompareExchangePoin [rest of string was truncated]&quot;;.
+        ///	return __init&lt;::CoreLib::System::IntPtr&gt;(InterlockedCompareExchangePoin [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string intrin {
             get {
@@ -304,10 +304,10 @@ namespace Il2Native.Logic.Properties {
         ///	struct UIntPtr;
         ///}}
         ///
-        ///extern CoreLib::System::IntPtr _interlocked_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value);
-        ///extern CoreLib::System::IntPtr _interlocked_compare_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value, CoreLib::System::IntPtr comparand);
+        ///extern ::CoreLib::System::IntPtr _interlocked_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value);
+        ///extern ::CoreLib::System::IntPtr _interlocked_compare_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value, ::CoreLib::System::IntPtr comparand);
         ///
-        ///extern CoreLib::System::UIntPtr _interlocked_exchange(CoreLib::System::UIntPtr volatile* location1, CoreLib::System::UIntPtr [rest of string was truncated]&quot;;.
+        ///extern ::CoreLib::System::UIntPtr _interlocked_exchange(::CoreLib::System::UIntPtr volatile* location1, ::CoreLib::System::UIntPtr [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string intrin_template {
             get {
@@ -321,7 +321,7 @@ namespace Il2Native.Logic.Properties {
         ///{
         ///	if (operand == std::numeric_limits&lt;T&gt;::min())
         ///	{
-        ///		throw __new&lt;CoreLib::System::OverflowException&gt;();
+        ///		throw __new&lt;::CoreLib::System::OverflowException&gt;();
         ///	}
         ///
         ///	return -operand;

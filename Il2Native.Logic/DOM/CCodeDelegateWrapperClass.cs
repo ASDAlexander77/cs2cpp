@@ -129,7 +129,7 @@ namespace Il2Native.Logic.DOM
 
             // write default constructor
             c.WriteTypeName(nonStaticType);
-            c.TextSpanNewLine("(_Ty* t, _Memptr memptr) : _t(t), _memptr(memptr) { CoreLib::System::Delegate::_target = object_cast(t); CoreLib::System::Delegate::_methodPtr = __init<CoreLib::System::IntPtr>(map_pointer_cast<void*, _Memptr>(memptr)); }");
+            c.TextSpanNewLine("(_Ty* t, _Memptr memptr) : _t(t), _memptr(memptr) { ::CoreLib::System::Delegate::_target = object_cast(t); ::CoreLib::System::Delegate::_methodPtr = __init<::CoreLib::System::IntPtr>(map_pointer_cast<void*, _Memptr>(memptr)); }");
 
             // write invoke
             this.CreateInvokeMethod().WriteTo(c);
@@ -185,7 +185,7 @@ namespace Il2Native.Logic.DOM
 
             // write default constructor
             c.WriteTypeName(staticType);
-            c.TextSpanNewLine("(_Memptr memptr) : _memptr(memptr) {  CoreLib::System::Delegate::_methodPtr = __init<CoreLib::System::IntPtr>(map_pointer_cast<void*, _Memptr>(memptr)); }");
+            c.TextSpanNewLine("(_Memptr memptr) : _memptr(memptr) {  ::CoreLib::System::Delegate::_methodPtr = __init<::CoreLib::System::IntPtr>(map_pointer_cast<void*, _Memptr>(memptr)); }");
 
             // write invoke
             this.CreateInvokeMethod(true).WriteTo(c);

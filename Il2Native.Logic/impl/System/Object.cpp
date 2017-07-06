@@ -1,13 +1,20 @@
 #include "CoreLib.h"
 
-// Method : object.GetType()
-CoreLib::System::Type* CoreLib::System::Object::GetType()
-{
-    return this->__get_type();
-}
+namespace CoreLib {
+	namespace System {
 
-// Method : object.MemberwiseClone()
-object* CoreLib::System::Object::MemberwiseClone()
-{
-    return this->__clone();
+		namespace _ = ::CoreLib::System;
+
+		// Method : object.GetType()
+		_::Type* Object::GetType()
+		{
+			return this->__get_type();
+		}
+
+		// Method : object.MemberwiseClone()
+		object* Object::MemberwiseClone()
+		{
+			return this->__clone();
+		}
+	}
 }

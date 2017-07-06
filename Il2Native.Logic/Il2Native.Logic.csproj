@@ -216,40 +216,20 @@
   <ItemGroup>
     <Content Include="impl\Microsoft\Win32\Win32Native.cpp" />
     <Content Include="impl\System\Activator.hpp" />
-    <Content Include="impl\System\AppDomain.cpp" />
     <Content Include="impl\System\Array.cpp" />
     <Content Include="impl\System\Buffer.cpp" />
     <Content Include="impl\System\DateTime.cpp" />
-    <Content Include="impl\System\DefaultBinder.cpp" />
     <Content Include="impl\System\Diagnostics\Debugger.cpp" />
     <Content Include="impl\System\Environment.cpp" />
     <Content Include="impl\System\GC.cpp" />
-    <Content Include="impl\System\IO\__DebugOutputTextWriter.cpp" />
     <Content Include="impl\System\Math.cpp" />
-    <Content Include="impl\System\MissingMemberException.cpp" />
     <Content Include="impl\System\ModuleHandle.cpp" />
     <Content Include="impl\System\Number.cpp" />
     <Content Include="impl\System\Object.cpp" />
-    <Content Include="impl\System\Reflection\CustomAttribute.cpp" />
-    <Content Include="impl\System\Reflection\CustomAttributeEncodedArgument.cpp" />
-    <Content Include="impl\System\Reflection\LoaderAllocatorScout.cpp" />
-    <Content Include="impl\System\Reflection\MetadataImport.cpp" />
-    <Content Include="impl\System\Reflection\PseudoCustomAttribute.cpp" />
-    <Content Include="impl\System\Reflection\RtFieldInfo.cpp" />
-    <Content Include="impl\System\Reflection\RuntimeAssembly.cpp" />
-    <Content Include="impl\System\Reflection\RuntimeModule.cpp" />
-    <Content Include="impl\System\Reflection\SecurityContextFrame.cpp" />
-    <Content Include="impl\System\RuntimeFieldHandle.cpp" />
-    <Content Include="impl\System\RuntimeMethodHandle.cpp" />
-    <Content Include="impl\System\RuntimeType.cpp" />
     <Content Include="impl\System\RuntimeTypeHandle.cpp" />
-    <Content Include="impl\System\Runtime\CompilerServices\JitHelpers.cpp" />
     <Content Include="impl\System\Runtime\CompilerServices\JitHelpers.hpp" />
     <Content Include="impl\System\Runtime\CompilerServices\RuntimeHelpers.cpp" />
     <Content Include="impl\System\Runtime\InteropServices\Marshal.cpp" />
-    <Content Include="impl\System\Runtime\InteropServices\SafeBuffer.cpp" />
-    <Content Include="impl\System\Runtime\Remoting\RemotingServices.cpp" />
-    <Content Include="impl\System\Signature.cpp" />
     <Content Include="impl\System\String.cpp" />
     <Content Include="impl\System\Threading\Interlocked.cpp" />
     <Content Include="impl\System\Threading\Interlocked.hpp" />
@@ -257,8 +237,6 @@
     <Content Include="impl\System\Threading\Thread.cpp" />
     <Content Include="impl\System\Threading\WaitHandle.cpp" />
     <Content Include="impl\System\TypedReference.cpp" />
-    <Content Include="impl\System\TypeLoadException.cpp" />
-    <Content Include="impl\System\Utf8String.cpp" />
     <Content Include="Resources\Android.mk" />
     <Content Include="Resources\Application.mk" />
     <Content Include="Resources\intrin_template.h" />
@@ -296,6 +274,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>powershell.exe -nologo -noprofile -command "&amp; { if (Test-Path '$(ProjectDir)Resources\Impl.zip') { Remove-Item '$(ProjectDir)Resources\Impl.zip' } Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('$(ProjectDir)Impl', '$(ProjectDir)Resources\Impl.zip'); }"</PreBuildEvent>

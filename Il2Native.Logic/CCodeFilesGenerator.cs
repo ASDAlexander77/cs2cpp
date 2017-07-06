@@ -73,7 +73,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                c.TextSpan("CoreLib::System::Environment::get_ExitCode()");
+                c.TextSpan("::CoreLib::System::Environment::get_ExitCode()");
             }
 
             c.TextSpanNewLine(";");
@@ -648,12 +648,19 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 {
                     var completeFileName = Path.Combine(implFolder, file.FullName);
                     var directoryName = Path.GetDirectoryName(completeFileName);
+
                     if (!Directory.Exists(directoryName))
                     {
                         Directory.CreateDirectory(directoryName);
-                        file.ExtractToFile(completeFileName);
                     }
-                    else if (!File.Exists(completeFileName))
+
+                    var fileName = Path.GetFileName(file.FullName);
+                    if (string.IsNullOrWhiteSpace(fileName))
+                    {
+                        continue;
+                    }
+
+                    if (!File.Exists(completeFileName))
                     {
                         file.ExtractToFile(completeFileName);
                     }
@@ -739,6 +746,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     c.WhiteSpace();
                 }
 
+                ////c.TextSpan("e_");
                 c.WriteName(constValue);
                 if (constValue.ConstantValue != null)
                 {

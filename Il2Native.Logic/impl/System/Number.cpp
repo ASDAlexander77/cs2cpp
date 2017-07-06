@@ -1,6 +1,13 @@
 #include "CoreLib.h"
 
-double CoreLib::System::Number::modf_Ref(double x, double& intpart)
-{
-    return std::modf(x, &intpart);
+namespace CoreLib {
+	namespace System {
+		
+		namespace _ = ::CoreLib::System;
+		
+		double Number::modf_Ref(double x, double& intpart)
+		{
+			return std::modf(x, &intpart);
+		}
+	}
 }

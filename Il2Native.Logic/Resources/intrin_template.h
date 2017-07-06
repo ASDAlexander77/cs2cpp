@@ -3,11 +3,11 @@ namespace CoreLib { namespace System {
 	struct UIntPtr;
 }}
 
-extern CoreLib::System::IntPtr _interlocked_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value);
-extern CoreLib::System::IntPtr _interlocked_compare_exchange(CoreLib::System::IntPtr volatile* location1, CoreLib::System::IntPtr value, CoreLib::System::IntPtr comparand);
+extern ::CoreLib::System::IntPtr _interlocked_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value);
+extern ::CoreLib::System::IntPtr _interlocked_compare_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value, ::CoreLib::System::IntPtr comparand);
 
-extern CoreLib::System::UIntPtr _interlocked_exchange(CoreLib::System::UIntPtr volatile* location1, CoreLib::System::UIntPtr value);
-extern CoreLib::System::UIntPtr _interlocked_compare_exchange(CoreLib::System::UIntPtr volatile* location1, CoreLib::System::UIntPtr value, CoreLib::System::UIntPtr comparand);
+extern ::CoreLib::System::UIntPtr _interlocked_exchange(::CoreLib::System::UIntPtr volatile* location1, ::CoreLib::System::UIntPtr value);
+extern ::CoreLib::System::UIntPtr _interlocked_compare_exchange(::CoreLib::System::UIntPtr volatile* location1, ::CoreLib::System::UIntPtr value, ::CoreLib::System::UIntPtr comparand);
 
 #ifdef _MSC_VER
 

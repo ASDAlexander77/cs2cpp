@@ -223,27 +223,27 @@ struct type_holder<__pointer<T>> { typedef __pointer<T> type; };
 
 template <typename T> struct __pointer
 {
-	static CoreLib::System::RuntimeType __type;
+	static ::CoreLib::System::RuntimeType __type;
 	static __runtimetype_info __rt_info;
 };
 
 // Arrays internals
 template <typename T> struct __array__type
 {
-	static CoreLib::System::RuntimeType __type;
+	static ::CoreLib::System::RuntimeType __type;
 	static __runtimetype_info __rt_info;
 };
 
 template<typename T>
 struct type_holder<__array<T>> { typedef __array__type<T> type; };
 
-template <typename T> class __array : public CoreLib::System::Array
+template <typename T> class __array : public ::CoreLib::System::Array
 {
 public:
 	int32_t _length;
 	T _data[0];
 
-	typedef CoreLib::System::Array base;
+	typedef ::CoreLib::System::Array base;
 	__array(int32_t length) { _length = length; }
 	__array(const __array<T>&) = delete;
 	__array(__array<T>&&) = delete;
@@ -290,12 +290,12 @@ public:
 	{ 
 		if (index < 0 || index >= _length)
 		{
-			throw __new<CoreLib::System::IndexOutOfRangeException>();
+			throw __new<::CoreLib::System::IndexOutOfRangeException>();
 		}
 
 		if (this == nullptr)
 		{
-			throw __new<CoreLib::System::NullReferenceException>();
+			throw __new<::CoreLib::System::NullReferenceException>();
 		}
 
 		return _data[index]; 
@@ -305,12 +305,12 @@ public:
 	{
 		if (index < 0 || index >= _length)
 		{
-			throw __new<CoreLib::System::IndexOutOfRangeException>();
+			throw __new<::CoreLib::System::IndexOutOfRangeException>();
 		}
 
 		if (this == nullptr)
 		{
-			throw __new<CoreLib::System::NullReferenceException>();
+			throw __new<::CoreLib::System::NullReferenceException>();
 		}
 
 		return _data[index]; 
@@ -320,7 +320,7 @@ public:
 	{ 
 		if (this == nullptr)
 		{
-			throw __new<CoreLib::System::NullReferenceException>();
+			throw __new<::CoreLib::System::NullReferenceException>();
 		}
 
 		return (size_t)_length; 
@@ -330,7 +330,7 @@ public:
 	{
 		if (this == nullptr)
 		{
-			throw __new<CoreLib::System::NullReferenceException>();
+			throw __new<::CoreLib::System::NullReferenceException>();
 		}
 
 		auto instance = allocate_array(this->_length);
@@ -339,10 +339,10 @@ public:
 		return instance;
 	}
 
-	virtual CoreLib::System::Type* __get_type() override;
-	virtual bool __is_type(CoreLib::System::Type*) override;
+	virtual ::CoreLib::System::Type* __get_type() override;
+	virtual bool __is_type(::CoreLib::System::Type*) override;
 	virtual uint32_t __get_size() override;
-	virtual void*  __get_interface(CoreLib::System::Type*) override;
+	virtual void*  __get_interface(::CoreLib::System::Type*) override;
 
 	// Array
 	virtual int32_t __array_element_size() override;
@@ -368,31 +368,31 @@ public:
 	bool System_Collections_Generic_ICollectionT1_Remove(T);
 
 	// IEnumerableT1
-	CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
+	::CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
 
 	// IList
-	CoreLib::System::Object* System_Collections_IList_get_Item(int32_t);
-	void System_Collections_IList_set_Item(int32_t, CoreLib::System::Object*);
-	int32_t System_Collections_IList_Add(CoreLib::System::Object*);
-	bool System_Collections_IList_Contains(CoreLib::System::Object*);
+	::CoreLib::System::Object* System_Collections_IList_get_Item(int32_t);
+	void System_Collections_IList_set_Item(int32_t, ::CoreLib::System::Object*);
+	int32_t System_Collections_IList_Add(::CoreLib::System::Object*);
+	bool System_Collections_IList_Contains(::CoreLib::System::Object*);
 	void System_Collections_IList_Clear();
 	bool System_Collections_IList_get_IsReadOnly();
 	bool System_Collections_IList_get_IsFixedSize(); 
-	int32_t System_Collections_IList_IndexOf(CoreLib::System::Object*);
-	void System_Collections_IList_Insert(int32_t, CoreLib::System::Object*);
-	void System_Collections_IList_Remove(CoreLib::System::Object*);
+	int32_t System_Collections_IList_IndexOf(::CoreLib::System::Object*);
+	void System_Collections_IList_Insert(int32_t, ::CoreLib::System::Object*);
+	void System_Collections_IList_Remove(::CoreLib::System::Object*);
 	void System_Collections_IList_RemoveAt(int32_t);
 
 	// ICollection
-	void System_Collections_ICollection_CopyTo(CoreLib::System::Array*, int32_t);
+	void System_Collections_ICollection_CopyTo(::CoreLib::System::Array*, int32_t);
 	int32_t System_Collections_ICollection_get_Count();
-	CoreLib::System::Object* System_Collections_ICollection_get_SyncRoot();
+	::CoreLib::System::Object* System_Collections_ICollection_get_SyncRoot();
 	bool System_Collections_ICollection_get_IsSynchronized();
 
 	// IEnumerable
-	CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
+	::CoreLib::System::Collections::IEnumerator* System_Collections_IEnumerable_GetEnumerator();
 
-	class __array_IListT1 : public CoreLib::System::Collections::Generic::IListT1<T>
+	class __array_IListT1 : public ::CoreLib::System::Collections::Generic::IListT1<T>
 	{
 	public:
 		__array_IListT1(__array<T>* class_) : _class{class_} {}
@@ -413,14 +413,14 @@ public:
 		bool Contains(T);
 		void CopyTo(__array<T>*, int32_t);
 		bool Remove(T);
-		CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
-		CoreLib::System::Collections::IEnumerator* GetEnumerator();
+		::CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
+		::CoreLib::System::Collections::IEnumerator* GetEnumerator();
 	};
-	operator CoreLib::System::Collections::Generic::IListT1<T>*()
+	operator ::CoreLib::System::Collections::Generic::IListT1<T>*()
 	{
 		return new (GCNormal::Default) __array_IListT1(this);
 	}
-	class __array_ICollectionT1 : public CoreLib::System::Collections::Generic::ICollectionT1<T>
+	class __array_ICollectionT1 : public ::CoreLib::System::Collections::Generic::ICollectionT1<T>
 	{
 	public:
 		__array_ICollectionT1(__array<T>* class_) : _class{class_} {}
@@ -436,14 +436,14 @@ public:
 		bool Contains(T);
 		void CopyTo(__array<T>*, int32_t);
 		bool Remove(T);
-		CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
-		CoreLib::System::Collections::IEnumerator* GetEnumerator();
+		::CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
+		::CoreLib::System::Collections::IEnumerator* GetEnumerator();
 	};
-	operator CoreLib::System::Collections::Generic::ICollectionT1<T>*()
+	operator ::CoreLib::System::Collections::Generic::ICollectionT1<T>*()
 	{
 		return new (GCNormal::Default) __array_ICollectionT1(this);
 	}
-	class __array_IEnumerableT1 : public CoreLib::System::Collections::Generic::IEnumerableT1<T>
+	class __array_IEnumerableT1 : public ::CoreLib::System::Collections::Generic::IEnumerableT1<T>
 	{
 	public:
 		__array_IEnumerableT1(__array<T>* class_) : _class{class_} {}
@@ -452,14 +452,14 @@ public:
 			return this->_class;
 		}
 		__array<T>* _class;
-		CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
-		CoreLib::System::Collections::IEnumerator* GetEnumerator();
+		::CoreLib::System::Collections::Generic::IEnumeratorT1<T>* System_Collections_Generic_IEnumerableT1_GetEnumerator();
+		::CoreLib::System::Collections::IEnumerator* GetEnumerator();
 	};
-	operator CoreLib::System::Collections::Generic::IEnumerableT1<T>*()
+	operator ::CoreLib::System::Collections::Generic::IEnumerableT1<T>*()
 	{
 		return new (GCNormal::Default) __array_IEnumerableT1(this);
 	}
-	class __array_IEnumerable : public CoreLib::System::Collections::IEnumerable
+	class __array_IEnumerable : public ::CoreLib::System::Collections::IEnumerable
 	{
 	public:
 		__array_IEnumerable(__array<T>* class_) : _class{class_} {}
@@ -468,13 +468,13 @@ public:
 			return this->_class;
 		}
 		__array<T>* _class;
-		CoreLib::System::Collections::IEnumerator* GetEnumerator();
+		::CoreLib::System::Collections::IEnumerator* GetEnumerator();
 	};
-	operator CoreLib::System::Collections::IEnumerable*()
+	operator ::CoreLib::System::Collections::IEnumerable*()
 	{
 		return new __array_IEnumerable(this);
 	}
-	class __array_IList : public CoreLib::System::Collections::IList
+	class __array_IList : public ::CoreLib::System::Collections::IList
 	{
 	public:
 		__array_IList(__array<T>* class_) : _class{class_} {}
@@ -483,28 +483,28 @@ public:
 			return this->_class;
 		}
 		__array<T>* _class;
-		CoreLib::System::Object* get_Item(int32_t);
-		void set_Item(int32_t, CoreLib::System::Object*);
-		int32_t Add(CoreLib::System::Object*);
-		bool Contains(CoreLib::System::Object*);
+		::CoreLib::System::Object* get_Item(int32_t);
+		void set_Item(int32_t, ::CoreLib::System::Object*);
+		int32_t Add(::CoreLib::System::Object*);
+		bool Contains(::CoreLib::System::Object*);
 		void Clear();
 		bool get_IsReadOnly();
 		bool get_IsFixedSize();
-		int32_t IndexOf(CoreLib::System::Object*);
-		void Insert(int32_t, CoreLib::System::Object*);
-		void Remove(CoreLib::System::Object*);
+		int32_t IndexOf(::CoreLib::System::Object*);
+		void Insert(int32_t, ::CoreLib::System::Object*);
+		void Remove(::CoreLib::System::Object*);
 		void RemoveAt(int32_t);
-		void CopyTo(CoreLib::System::Array*, int32_t);
+		void CopyTo(::CoreLib::System::Array*, int32_t);
 		int32_t get_Count();
-		CoreLib::System::Object* get_SyncRoot();
+		::CoreLib::System::Object* get_SyncRoot();
 		bool get_IsSynchronized();
-		CoreLib::System::Collections::IEnumerator* GetEnumerator();
+		::CoreLib::System::Collections::IEnumerator* GetEnumerator();
 	};
-	operator CoreLib::System::Collections::IList*()
+	operator ::CoreLib::System::Collections::IList*()
 	{
 		return new (GCNormal::Default) __array_IList(this);
 	}
-	class __array_ICollection : public CoreLib::System::Collections::ICollection
+	class __array_ICollection : public ::CoreLib::System::Collections::ICollection
 	{
 	public:
 		__array_ICollection(__array<T>* class_) : _class{class_} {}
@@ -513,13 +513,13 @@ public:
 			return this->_class;
 		}
 		__array<T>* _class;
-		void CopyTo(CoreLib::System::Array*, int32_t);
+		void CopyTo(::CoreLib::System::Array*, int32_t);
 		int32_t get_Count();
-		CoreLib::System::Object* get_SyncRoot();
+		::CoreLib::System::Object* get_SyncRoot();
 		bool get_IsSynchronized();
-		CoreLib::System::Collections::IEnumerator* GetEnumerator();
+		::CoreLib::System::Collections::IEnumerator* GetEnumerator();
 	};
-	operator CoreLib::System::Collections::ICollection*()
+	operator ::CoreLib::System::Collections::ICollection*()
 	{
 		return new (GCNormal::Default) __array_ICollection(this);
 	}
@@ -527,21 +527,21 @@ public:
 
 template <typename T, int32_t RANK> struct __multi_array__type
 {
-	static CoreLib::System::RuntimeType __type;
+	static ::CoreLib::System::RuntimeType __type;
 	static __runtimetype_info __rt_info;
 };
 
 template <typename T, int32_t RANK>
 struct type_holder<__multi_array<T, RANK>> { typedef __multi_array__type<T, RANK> type; };
 
-template <typename T, int32_t RANK> class __multi_array : public CoreLib::System::Array
+template <typename T, int32_t RANK> class __multi_array : public ::CoreLib::System::Array
 {
 public:
 	int32_t _lowerBoundries[RANK];
 	int32_t _upperBoundries[RANK];
 	T _data[0];
 
-	typedef CoreLib::System::Array base;
+	typedef ::CoreLib::System::Array base;
 
 	__multi_array()
 	{
@@ -556,7 +556,7 @@ public:
 	{ 
 		if (this == nullptr)
 		{
-			throw __new<CoreLib::System::NullReferenceException>();
+			throw __new<::CoreLib::System::NullReferenceException>();
 		}
 
 		return _data[calculate_index(indexes)]; 
@@ -566,7 +566,7 @@ public:
 	{ 
 		if (this == nullptr)
 		{
-			throw __new<CoreLib::System::NullReferenceException>();
+			throw __new<::CoreLib::System::NullReferenceException>();
 		}
 
 		return _data[calculate_index(indexes)];  
@@ -584,7 +584,7 @@ public:
 			auto upper = _upperBoundries[rank];
 			if (levelIndex < lower || levelIndex >= upper)
 			{
-				throw __new<CoreLib::System::IndexOutOfRangeException>();
+				throw __new<::CoreLib::System::IndexOutOfRangeException>();
 			}
 
 			index_multiplier *= (upper - lower);
@@ -607,7 +607,7 @@ public:
 			auto upper = _upperBoundries[rank];
 			if (levelIndex < lower || levelIndex >= upper)
 			{
-				throw __new<CoreLib::System::IndexOutOfRangeException>();
+				throw __new<::CoreLib::System::IndexOutOfRangeException>();
 			}
 
 			index_multiplier *= (upper - lower);
@@ -668,7 +668,7 @@ public:
 	{
 		if (this == nullptr)
 		{
-			throw __new<CoreLib::System::NullReferenceException>();
+			throw __new<::CoreLib::System::NullReferenceException>();
 		}
 
 		auto length = 1;
@@ -685,8 +685,8 @@ public:
 		return instance;
 	}
 
-	virtual CoreLib::System::Type* __get_type() override;
-	virtual bool __is_type(CoreLib::System::Type*) override;
+	virtual ::CoreLib::System::Type* __get_type() override;
+	virtual bool __is_type(::CoreLib::System::Type*) override;
 
 	virtual int32_t __array_element_size() override;
 	virtual bool __is_primitive_type_array() override;
@@ -1158,12 +1158,12 @@ inline bool operator ==(const T& left, const T& right)
 // string helpers
 inline string* __utf8_to_string(char* str)
 {
-	return string::CreateStringFromEncoding((uint8_t*)str, std::strlen(str), CoreLib::System::Text::Encoding::get_UTF8());
+	return string::CreateStringFromEncoding((uint8_t*)str, std::strlen(str), ::CoreLib::System::Text::Encoding::get_UTF8());
 }
 
 inline string* __ascii_to_string(char* str)
 {
-	return string::CreateStringFromEncoding((uint8_t*)str, std::strlen(str), CoreLib::System::Text::Encoding::get_ASCII());
+	return string::CreateStringFromEncoding((uint8_t*)str, std::strlen(str), ::CoreLib::System::Text::Encoding::get_ASCII());
 }
 
 inline string* __wchar_t_to_string(char16_t* str)

@@ -25,9 +25,9 @@ namespace CoreLib { namespace System { namespace Runtime { namespace CompilerSer
     
     // Method : System.Runtime.CompilerServices.JitHelpers.UnsafeCastToStackPointer<T>(ref T)
     template <typename T> 
-    CoreLib::System::IntPtr JitHelpers::UnsafeCastToStackPointer_RefT1(T& val)
+    ::CoreLib::System::IntPtr JitHelpers::UnsafeCastToStackPointer_RefT1(T& val)
     {
-        return __init<CoreLib::System::IntPtr>((void*)&val);
+        return __init<::CoreLib::System::IntPtr>((void*)&val);
     }
 }}}}
 #endif

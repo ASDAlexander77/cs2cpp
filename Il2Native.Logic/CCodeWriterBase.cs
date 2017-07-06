@@ -401,6 +401,11 @@ namespace Il2Native.Logic
 
             this.TextSpan("::");
 
+            ////if (enumAsConst && receiverType.TypeKind == TypeKind.Enum)
+            ////{
+            ////    this.TextSpan("e_");
+            ////}
+
             this.WriteName(fieldSymbol);
         }
 
@@ -837,16 +842,9 @@ namespace Il2Native.Logic
 
         public void WriteNamespace(INamespaceSymbol namespaceSymbol)
         {
-            var any = false;
             foreach (var namespaceNode in namespaceSymbol.EnumNamespaces())
             {
-                if (any)
-                {
-                    this.TextSpan("::");
-                }
-
-                any = true;
-
+                this.TextSpan("::");
                 this.WriteNamespaceName(namespaceNode);
             }
         }
@@ -971,7 +969,7 @@ namespace Il2Native.Logic
                 default:
                     if (type.TypeKind == TypeKind.Unknown)
                     {
-                        this.TextSpan("CoreLib::");
+                        this.TextSpan("::CoreLib::");
                         this.TextSpan(type.SpecialType.ToString().Replace("_", "::"));
                         if (type.IsReferenceType)
                         {

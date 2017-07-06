@@ -30,7 +30,7 @@
 namespace CoreLib { namespace Microsoft { namespace Win32 { 
 
 	// Method : Microsoft.Win32.Win32Native.SetEvent(Microsoft.Win32.SafeHandles.SafeWaitHandle)
-	bool Win32Native::SetEvent(CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* handle)
+	bool Win32Native::SetEvent(::CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* handle)
 	{
 #ifndef GC_PTHREADS
 		return ::SetEvent((HANDLE)handle->handle.ToInt32());
@@ -40,7 +40,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	}
 
 	// Method : Microsoft.Win32.Win32Native.ResetEvent(Microsoft.Win32.SafeHandles.SafeWaitHandle)
-	bool Win32Native::ResetEvent(CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* handle)
+	bool Win32Native::ResetEvent(::CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* handle)
 	{
 #ifndef GC_PTHREADS
 		return ::ResetEvent((HANDLE)handle->handle.ToInt32());
@@ -50,7 +50,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	}
 
 	// Method : Microsoft.Win32.Win32Native.CreateEvent(Microsoft.Win32.Win32Native.SECURITY_ATTRIBUTES, bool, bool, string)
-	CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* Win32Native::CreateEvent(CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* lpSecurityAttributes, bool isManualReset, bool initialState, string* name)
+	::CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle* Win32Native::CreateEvent(::CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* lpSecurityAttributes, bool isManualReset, bool initialState, string* name)
 	{
 #ifndef GC_PTHREADS
 		auto hEvent = CreateEventW((LPSECURITY_ATTRIBUTES)lpSecurityAttributes,
@@ -60,21 +60,21 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 
 		if (hEvent == (HANDLE)-1)
 		{
-			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
+			return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle>(((::CoreLib::System::IntPtr)::CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
 		}
 
-		return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle>(__init<CoreLib::System::IntPtr>(hEvent), false);
+		return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeWaitHandle>(__init<::CoreLib::System::IntPtr>(hEvent), false);
 #else
 #error NOT IMPLEMENTED YET
 #endif
 	}
 
 	// Method : Microsoft.Win32.Win32Native.GetFullPathName(char*, int, char*, System.IntPtr)
-	int32_t Win32Native::GetFullPathName(char16_t* path, int32_t numBufferChars, char16_t* buffer, CoreLib::System::IntPtr mustBeZero)
+	int32_t Win32Native::GetFullPathName(char16_t* path, int32_t numBufferChars, char16_t* buffer, ::CoreLib::System::IntPtr mustBeZero)
 	{
 		if (static_cast<void*>(path) == (void*)nullptr)
 		{
-			throw __new<CoreLib::System::ArgumentNullException>(u"path"_s, u"path"_s);
+			throw __new<::CoreLib::System::ArgumentNullException>(u"path"_s, u"path"_s);
 		}
 
 #ifndef GC_PTHREADS
@@ -83,7 +83,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 		return string::wcslen(_wfullpath(buffer, path, numBufferChars));
 #else
 		auto path_length = string::wcslen(path);
-		auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
+		auto utf8Enc = ::CoreLib::System::Text::Encoding::get_UTF8();
 		auto byteCount = utf8Enc->GetByteCount(path, path_length);
 		auto relative_path_utf8 = reinterpret_cast<uint8_t*>(alloca(byteCount + 1));
 		auto bytesReceived = utf8Enc->GetBytes(path, path_length, relative_path_utf8, byteCount);
@@ -100,13 +100,13 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	}
 
 	// Method : Microsoft.Win32.Win32Native.GetStdHandle(int)
-	CoreLib::System::IntPtr Win32Native::GetStdHandle(int32_t nStdHandle)
+	::CoreLib::System::IntPtr Win32Native::GetStdHandle(int32_t nStdHandle)
 	{
-		return __init<CoreLib::System::IntPtr>(nStdHandle);
+		return __init<::CoreLib::System::IntPtr>(nStdHandle);
 	}
 
 	// Method : Microsoft.Win32.Win32Native.CreateFile(string, int, System.IO.FileShare, Microsoft.Win32.Win32Native.SECURITY_ATTRIBUTES, System.IO.FileMode, int, System.IntPtr)
-	CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* Win32Native::CreateFile(string* lpFileName, int32_t dwDesiredAccess, CoreLib::System::IO::FileShare__enum dwShareMode, CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* securityAttrs, CoreLib::System::IO::FileMode__enum dwCreationDisposition, int32_t dwFlagsAndAttributes, CoreLib::System::IntPtr hTemplateFile)
+	::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* Win32Native::CreateFile(string* lpFileName, int32_t dwDesiredAccess, ::CoreLib::System::IO::FileShare__enum dwShareMode, ::CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* securityAttrs, ::CoreLib::System::IO::FileMode__enum dwCreationDisposition, int32_t dwFlagsAndAttributes, ::CoreLib::System::IntPtr hTemplateFile)
 	{
 #ifndef GC_PTHREADS
 		auto hFile = CreateFileW((LPCWSTR)&lpFileName->m_firstChar,    // name of the write
@@ -119,10 +119,10 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 
 		if (hFile == (HANDLE)-1)
 		{
-			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
+			return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((::CoreLib::System::IntPtr)::CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
 		}
 
-		return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(__init<CoreLib::System::IntPtr>(hFile), false);
+		return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(__init<::CoreLib::System::IntPtr>(hFile), false);
 #else
 		int32_t filed = -1;
 		int32_t create_flags = (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -131,12 +131,12 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 
 		if (lpFileName == nullptr)
 		{
-			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
+			return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((::CoreLib::System::IntPtr)::CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
 		}
 
 		auto path = &lpFileName->m_firstChar;
 		auto path_length = string::wcslen(path);
-		auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
+		auto utf8Enc = ::CoreLib::System::Text::Encoding::get_UTF8();
 		auto byteCount = utf8Enc->GetByteCount(path, path_length);
 		auto path_urf8 = reinterpret_cast<char*>(alloca(byteCount + 1));
 		auto bytesReceived = utf8Enc->GetBytes(path, path_length, (uint8_t*)path_urf8, byteCount);
@@ -153,12 +153,12 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 			open_flags |= O_RDWR;
 			break;
 		default:
-			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
+			return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((::CoreLib::System::IntPtr)::CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
 		}
 
-		switch ((CoreLib::System::IO::FileMode__enum)dwCreationDisposition)
+		switch ((::CoreLib::System::IO::FileMode__enum)dwCreationDisposition)
 		{
-		case CoreLib::System::IO::FileMode__enum::Create:
+		case ::CoreLib::System::IO::FileMode__enum::Create:
 			// check whether the file exists
 			if (access(path_urf8, F_OK) == 0)
 			{
@@ -167,13 +167,13 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 
 			open_flags |= O_CREAT | O_TRUNC;
 			break;
-		case CoreLib::System::IO::FileMode__enum::CreateNew:
+		case ::CoreLib::System::IO::FileMode__enum::CreateNew:
 			open_flags |= O_CREAT | O_EXCL;
 			break;
-		case CoreLib::System::IO::FileMode__enum::Open:
+		case ::CoreLib::System::IO::FileMode__enum::Open:
 			/* don't need to do anything here */
 			break;
-		case CoreLib::System::IO::FileMode__enum::OpenOrCreate:
+		case ::CoreLib::System::IO::FileMode__enum::OpenOrCreate:
 			if (access(path_urf8, F_OK) == 0)
 			{
 				fFileExists = true;
@@ -181,11 +181,11 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 
 			open_flags |= O_CREAT;
 			break;
-		case CoreLib::System::IO::FileMode__enum::Truncate:
+		case ::CoreLib::System::IO::FileMode__enum::Truncate:
 			open_flags |= O_TRUNC;
 			break;
 		default:
-			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((CoreLib::System::IntPtr)CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
+			return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((::CoreLib::System::IntPtr)::CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
 		}
 
 		if ((dwFlagsAndAttributes & FILE_FLAG_NO_BUFFERING) > 0)
@@ -196,14 +196,14 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 		filed = open(path_urf8, open_flags, (open_flags & O_CREAT) > 0 ? create_flags : 0);
 		if (filed < 0)
 		{
-			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(__init<CoreLib::System::IntPtr>(0), false);
+			return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(__init<::CoreLib::System::IntPtr>(0), false);
 		}
 
 #if flock
 		auto lock_mode = (dwShareMode == 0 /* FILE_SHARE_NONE */) ? LOCK_EX : LOCK_SH;
 		if (flock(filed, lock_mode | LOCK_NB) != 0)
 		{
-			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(INVALID_HANDLE_VALUE, false);
+			return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(INVALID_HANDLE_VALUE, false);
 		}
 #endif
 
@@ -213,7 +213,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 #if F_NOCACHE
 			if (-1 == fcntl(filed, F_NOCACHE, 1))
 			{
-				return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(INVALID_HANDLE_VALUE, false);
+				return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(INVALID_HANDLE_VALUE, false);
 			}
 #else
 			////#error Insufficient support for uncached I/O on this platform
@@ -227,16 +227,16 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 		auto ret = fcntl(filed, F_SETFD, 1);
 		if (-1 == ret)
 		{
-			return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(INVALID_HANDLE_VALUE, false);
+			return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(INVALID_HANDLE_VALUE, false);
 		}
 #endif
 
-		return __new<CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(__init<CoreLib::System::IntPtr>(filed), false);
+		return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(__init<::CoreLib::System::IntPtr>(filed), false);
 #endif
 	}
 
 	// Method : Microsoft.Win32.Win32Native.CloseHandle(System.IntPtr)
-	bool Win32Native::CloseHandle(CoreLib::System::IntPtr handle)
+	bool Win32Native::CloseHandle(::CoreLib::System::IntPtr handle)
 	{
 #ifndef GC_PTHREADS
 		return ::CloseHandle((HANDLE)handle.ToInt32());
@@ -248,7 +248,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	}
 
 	// Method : Microsoft.Win32.Win32Native.GetFileType(Microsoft.Win32.SafeHandles.SafeFileHandle)
-	int32_t Win32Native::GetFileType(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle)
+	int32_t Win32Native::GetFileType(::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle)
 	{
 		auto stdId = handle->DangerousGetHandle()->ToInt32();
 		if (stdId == -11 || stdId == -12)
@@ -260,7 +260,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	}
 
 	// Method : Microsoft.Win32.Win32Native.GetFileSize(Microsoft.Win32.SafeHandles.SafeFileHandle, out int)
-	int32_t Win32Native::GetFileSize_Out(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* hFile, int32_t& highSize)
+	int32_t Win32Native::GetFileSize_Out(::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* hFile, int32_t& highSize)
 	{
 #ifndef GC_PTHREADS
 		return GetFileSize((HANDLE)hFile->DangerousGetHandle()->ToInt32(), (LPDWORD)highSize);
@@ -278,7 +278,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	}
 
 	// Method : Microsoft.Win32.Win32Native.ReadFile(Microsoft.Win32.SafeHandles.SafeFileHandle, byte*, int, out int, System.IntPtr)
-	int32_t Win32Native::ReadFile_Out(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle, uint8_t* bytes, int32_t numBytesToRead, int32_t& numBytesRead, CoreLib::System::IntPtr mustBeZero)
+	int32_t Win32Native::ReadFile_Out(::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle, uint8_t* bytes, int32_t numBytesToRead, int32_t& numBytesRead, ::CoreLib::System::IntPtr mustBeZero)
 	{
 		auto fd = handle->DangerousGetHandle()->ToInt32();
 #if _MSC_VER
@@ -297,7 +297,7 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	}
 
 	// Method : Microsoft.Win32.Win32Native.WriteFile(Microsoft.Win32.SafeHandles.SafeFileHandle, byte*, int, out int, System.IntPtr)
-	int32_t Win32Native::WriteFile_Out(CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle, uint8_t* bytes, int32_t numBytesToWrite, int32_t& numBytesWritten, CoreLib::System::IntPtr mustBeZero)
+	int32_t Win32Native::WriteFile_Out(::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* handle, uint8_t* bytes, int32_t numBytesToWrite, int32_t& numBytesWritten, ::CoreLib::System::IntPtr mustBeZero)
 	{
 		auto fd = handle->DangerousGetHandle()->ToInt32();
 #ifndef GC_PTHREADS
@@ -329,13 +329,13 @@ namespace CoreLib { namespace Microsoft { namespace Win32 {
 	}
 
 	// Method : Microsoft.Win32.Win32Native.CreateDirectory(string, Microsoft.Win32.Win32Native.SECURITY_ATTRIBUTES)
-	bool Win32Native::CreateDirectory(string* path, CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* lpSecurityAttributes)
+	bool Win32Native::CreateDirectory(string* path, ::CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* lpSecurityAttributes)
 	{
 		throw 3221274624U;
 	}
 
 	// Method : Microsoft.Win32.Win32Native.GetCurrentDirectory(int, System.Text.StringBuilder)
-	int32_t Win32Native::GetCurrentDirectory(int32_t nBufferLength, CoreLib::System::Text::StringBuilder* lpBuffer)
+	int32_t Win32Native::GetCurrentDirectory(int32_t nBufferLength, ::CoreLib::System::Text::StringBuilder* lpBuffer)
 	{
 #ifndef GC_PTHREADS
 		auto buffer = reinterpret_cast<char16_t*>(alloca(nBufferLength + 1));
@@ -390,14 +390,14 @@ done:
 	}
 
 	// Method : Microsoft.Win32.Win32Native.GetFileAttributesEx(string, int, ref Microsoft.Win32.Win32Native.WIN32_FILE_ATTRIBUTE_DATA)
-	bool Win32Native::GetFileAttributesEx_Ref(string* name, int32_t fileInfoLevel, CoreLib::Microsoft::Win32::Win32Native_WIN32_FILE_ATTRIBUTE_DATA& lpFileInformation)
+	bool Win32Native::GetFileAttributesEx_Ref(string* name, int32_t fileInfoLevel, ::CoreLib::Microsoft::Win32::Win32Native_WIN32_FILE_ATTRIBUTE_DATA& lpFileInformation)
 	{
 #ifndef GC_PTHREADS
 		return ::GetFileAttributesExW((LPCWSTR)&name->m_firstChar, (GET_FILEEX_INFO_LEVELS)fileInfoLevel, &lpFileInformation);
 #else
 		auto filename = &name->m_firstChar;
 		auto filename_length = string::wcslen(filename);
-		auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
+		auto utf8Enc = ::CoreLib::System::Text::Encoding::get_UTF8();
 		auto byteCount = utf8Enc->GetByteCount(filename, filename_length);
 		auto filename_urf8 = reinterpret_cast<char*>(alloca(byteCount + 1));
 		auto bytesReceived = utf8Enc->GetBytes(filename, filename_length, (uint8_t*)filename_urf8, byteCount);
@@ -439,7 +439,7 @@ done:
 #else
 		auto path_ptr = &path->m_firstChar;
 		auto path_length = string::wcslen(path_ptr);
-		auto utf8Enc = CoreLib::System::Text::Encoding::get_UTF8();
+		auto utf8Enc = ::CoreLib::System::Text::Encoding::get_UTF8();
 		auto byteCount = utf8Enc->GetByteCount(path_ptr, path_length);
 		auto path_urf8 = reinterpret_cast<char*>(alloca(byteCount + 1));
 		auto bytesReceived = utf8Enc->GetBytes(path_ptr, path_length, (uint8_t*)path_urf8, byteCount);

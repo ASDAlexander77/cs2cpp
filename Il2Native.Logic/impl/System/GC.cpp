@@ -27,7 +27,7 @@ namespace CoreLib { namespace System {
 	}
 
 	// Method : System.GC.GetGenerationWR(System.IntPtr)
-	int32_t GC::GetGenerationWR(CoreLib::System::IntPtr handle)
+	int32_t GC::GetGenerationWR(::CoreLib::System::IntPtr handle)
 	{
 		return 0;
 	}
@@ -85,7 +85,7 @@ namespace CoreLib { namespace System {
 	{
 		while (GC_should_invoke_finalizers()) 
 		{
-			CoreLib::System::Threading::Thread::Sleep(10);
+			::CoreLib::System::Threading::Thread::Sleep(10);
 		}
 	}
 

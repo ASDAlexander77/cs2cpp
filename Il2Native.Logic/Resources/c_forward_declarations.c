@@ -25,18 +25,18 @@ struct type_holder { typedef T type; };
 template <typename T> struct convert_primitive_type_to_class
 {
 	typedef
-		typename std::conditional< std::is_same< T, void >::value, CoreLib::System::Void, 
-		typename std::conditional< std::is_same< T, int8_t >::value, CoreLib::System::SByte, 
-		typename std::conditional< std::is_same< T, uint8_t >::value, CoreLib::System::Byte, 
-		typename std::conditional< std::is_same< T, int16_t >::value, CoreLib::System::Int16, 
-		typename std::conditional< std::is_same< T, uint16_t >::value, CoreLib::System::UInt16, 
-		typename std::conditional< std::is_same< T, char16_t >::value, CoreLib::System::Char, 
-		typename std::conditional< std::is_same< T, int32_t >::value, CoreLib::System::Int32, 
-		typename std::conditional< std::is_same< T, uint32_t >::value, CoreLib::System::UInt32, 
-		typename std::conditional< std::is_same< T, int64_t >::value, CoreLib::System::Int64, 
-		typename std::conditional< std::is_same< T, uint64_t >::value, CoreLib::System::UInt64, 
-		typename std::conditional< std::is_same< T, float >::value, CoreLib::System::Single, 
-		typename std::conditional< std::is_same< T, double >::value, CoreLib::System::Double, 
+		typename std::conditional< std::is_same< T, void >::value, ::CoreLib::System::Void, 
+		typename std::conditional< std::is_same< T, int8_t >::value, ::CoreLib::System::SByte, 
+		typename std::conditional< std::is_same< T, uint8_t >::value, ::CoreLib::System::Byte, 
+		typename std::conditional< std::is_same< T, int16_t >::value, ::CoreLib::System::Int16, 
+		typename std::conditional< std::is_same< T, uint16_t >::value, ::CoreLib::System::UInt16, 
+		typename std::conditional< std::is_same< T, char16_t >::value, ::CoreLib::System::Char, 
+		typename std::conditional< std::is_same< T, int32_t >::value, ::CoreLib::System::Int32, 
+		typename std::conditional< std::is_same< T, uint32_t >::value, ::CoreLib::System::UInt32, 
+		typename std::conditional< std::is_same< T, int64_t >::value, ::CoreLib::System::Int64, 
+		typename std::conditional< std::is_same< T, uint64_t >::value, ::CoreLib::System::UInt64, 
+		typename std::conditional< std::is_same< T, float >::value, ::CoreLib::System::Single, 
+		typename std::conditional< std::is_same< T, double >::value, ::CoreLib::System::Double, 
 		T 
 		>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
 };
@@ -44,18 +44,18 @@ template <typename T> struct convert_primitive_type_to_class
 template <typename T> struct convert_class_to_primitive_type
 {
 	typedef
-		typename std::conditional< std::is_same< T, CoreLib::System::Void >::value, void, 
-		typename std::conditional< std::is_same< T, CoreLib::System::SByte >::value, int8_t, 
-		typename std::conditional< std::is_same< T, CoreLib::System::Byte >::value, uint8_t, 
-		typename std::conditional< std::is_same< T, CoreLib::System::Int16 >::value, int16_t, 
-		typename std::conditional< std::is_same< T, CoreLib::System::UInt16 >::value, uint16_t, 
-		typename std::conditional< std::is_same< T, CoreLib::System::Char >::value, char16_t, 
-		typename std::conditional< std::is_same< T, CoreLib::System::Int32 >::value, int32_t, 
-		typename std::conditional< std::is_same< T, CoreLib::System::UInt32 >::value, uint32_t, 
-		typename std::conditional< std::is_same< T, CoreLib::System::Int64 >::value, int64_t, 
-		typename std::conditional< std::is_same< T, CoreLib::System::UInt64 >::value, uint64_t, 
-		typename std::conditional< std::is_same< T, CoreLib::System::Single >::value, float, 
-		typename std::conditional< std::is_same< T, CoreLib::System::Double >::value, double, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Void >::value, void, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::SByte >::value, int8_t, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Byte >::value, uint8_t, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Int16 >::value, int16_t, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::UInt16 >::value, uint16_t, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Char >::value, char16_t, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Int32 >::value, int32_t, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::UInt32 >::value, uint32_t, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Int64 >::value, int64_t, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::UInt64 >::value, uint64_t, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Single >::value, float, 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Double >::value, double, 
 		T 
 		>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
 };
@@ -94,12 +94,12 @@ template <typename T> struct bare_type
 };
 
 template< typename T > struct is_nullable_type : std::false_type {};
-template< typename T > struct is_nullable_type<CoreLib::System::NullableT1<T>> : std::true_type {};
-template< typename T > struct is_nullable_type<CoreLib::System::NullableT1<T>*> : std::true_type {};
+template< typename T > struct is_nullable_type<::CoreLib::System::NullableT1<T>> : std::true_type {};
+template< typename T > struct is_nullable_type<::CoreLib::System::NullableT1<T>*> : std::true_type {};
 
 template< typename T > struct remove_nullable { typedef T type; };
-template< typename T > struct remove_nullable<CoreLib::System::NullableT1<T>> { typedef T type; };
-template< typename T > struct remove_nullable<CoreLib::System::NullableT1<T>*> { typedef T type; };
+template< typename T > struct remove_nullable<::CoreLib::System::NullableT1<T>> { typedef T type; };
+template< typename T > struct remove_nullable<::CoreLib::System::NullableT1<T>*> { typedef T type; };
 
 extern void GC_CALLBACK __finalizer(void * obj, void * client_data);
 
@@ -732,12 +732,12 @@ public:
 
 // Typeof internals
 class __methods_table;
-template <typename T> constexpr CoreLib::System::Type* _typeof()
+template <typename T> constexpr ::CoreLib::System::Type* _typeof()
 {
-	return (CoreLib::System::Type*) &type_holder<typename bare_type<T>::type>::type::__type;
+	return (::CoreLib::System::Type*) &type_holder<typename bare_type<T>::type>::type::__type;
 }
 
-template <typename T> constexpr CoreLib::System::RuntimeType* _runtime_typeof()
+template <typename T> constexpr ::CoreLib::System::RuntimeType* _runtime_typeof()
 {
 	return &type_holder<typename bare_type<T>::type>::type::__type;
 }
@@ -816,7 +816,7 @@ inline typename std::enable_if<!is_interface_type<T>::value, C>::type dynamic_in
 	auto d = reinterpret_cast<C>(object_cast(t)->__get_interface(_typeof<C>()));
 	if (d == nullptr)
 	{
-		throw __new<CoreLib::System::InvalidCastException>();
+		throw __new<::CoreLib::System::InvalidCastException>();
 	}
 
 	return d;
@@ -833,7 +833,7 @@ inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_int
 	auto d = reinterpret_cast<C>(object_cast(t)->__get_interface(_typeof<C>()));
 	if (d == nullptr)
 	{
-		throw __new<CoreLib::System::InvalidCastException>();
+		throw __new<::CoreLib::System::InvalidCastException>();
 	}
 
 	return d;
@@ -850,7 +850,7 @@ template <typename D, typename S> inline typename std::enable_if<!is_value_type<
 	auto d = dynamic_cast<D>(s);
 	if (d == nullptr)
 	{
-		throw __new<CoreLib::System::InvalidCastException>();
+		throw __new<::CoreLib::System::InvalidCastException>();
 	}
 
 	return d;
@@ -867,7 +867,7 @@ template <typename D, typename S> inline typename std::enable_if<is_class_type<D
 	auto d = dynamic_cast<D>(object_cast(s));
 	if (d == nullptr)
 	{
-		throw __new<CoreLib::System::InvalidCastException>();
+		throw __new<::CoreLib::System::InvalidCastException>();
 	}
 
 	return d;
@@ -917,7 +917,7 @@ template <typename T> inline typename std::enable_if<is_pointer_type<T>::value, 
 	return __box_pointer((void*)t);
 }
 
-template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline _CLASS* __box(CoreLib::System::NullableT1<T> t)
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline _CLASS* __box(::CoreLib::System::NullableT1<T> t)
 {
 	if (!t.get_HasValue())
 	{
@@ -955,7 +955,7 @@ template <typename T> inline typename std::enable_if<is_pointer_type<T>::value, 
 	return __box_pointer((void*)t);
 }
 
-template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline _CLASS* __box_debug (const char* _file, int _line, CoreLib::System::NullableT1<T> t)
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline _CLASS* __box_debug (const char* _file, int _line, ::CoreLib::System::NullableT1<T> t)
 {
 	if (!t.get_HasValue())
 	{
@@ -972,7 +972,7 @@ inline typename std::enable_if<!is_nullable_type<T>::value, T>::type __unbox(T* 
 {
 	if (t == nullptr)
 	{
-		throw __new<CoreLib::System::NullReferenceException>();
+		throw __new<::CoreLib::System::NullReferenceException>();
 	}
 
 	return *t;
@@ -1063,7 +1063,7 @@ public:
 		throw 0xC000C000;
 	}
 
-	virtual CoreLib::System::Type* __get_type() = 0;
+	virtual ::CoreLib::System::Type* __get_type() = 0;
 
 	// TODO: add new, unbox methods as virtual and/or abstract
 	virtual object* __box_ref(void* ref)
@@ -1082,14 +1082,14 @@ public:
 struct __runtimetype_info
 {
 	// TODO: finish it
-	////CoreLib::System::Reflection::RuntimeAssembly* __assembly;
-	////CoreLib::System::Reflection::RuntimeModule* __module;
+	////::CoreLib::System::Reflection::RuntimeAssembly* __assembly;
+	////::CoreLib::System::Reflection::RuntimeModule* __module;
 	const char16_t* __name;
 	const char16_t* __namespace;
 	int32_t __cor_element_type;
 	bool __is_generic_type_definition;
-	CoreLib::System::RuntimeType* __base_type;
-	CoreLib::System::RuntimeType* __element_type;
+	::CoreLib::System::RuntimeType* __base_type;
+	::CoreLib::System::RuntimeType* __element_type;
 };
 
 int32_t __hash_code(object* _obj);

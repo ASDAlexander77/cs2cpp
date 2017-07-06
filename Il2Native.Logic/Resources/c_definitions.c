@@ -201,5 +201,5 @@ __array<string*>* __get_arguments(int32_t argc, char* argv[])
 
 void throw_out_of_memory()
 {
-	throw __new<CoreLib::System::OutOfMemoryException>();
+	throw __new<::CoreLib::System::OutOfMemoryException>();
 }

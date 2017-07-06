@@ -20,7 +20,7 @@ namespace Il2Native.Logic.DOM2
         internal override void WriteTo(CCodeWriterBase c)
         {
             ////c.TextSpan("va_list");
-            c.TextSpan("__init<CoreLib::System::IntPtr>(nullptr)");
+            c.TextSpan("__init<::CoreLib::System::IntPtr>(nullptr)");
         }
     }
 }
