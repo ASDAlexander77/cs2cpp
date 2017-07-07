@@ -1045,8 +1045,10 @@ namespace Il2Native.Logic
             this.TextSpan(">");
         }
 
-        public void WriteTemplateDefinitionArguments(INamedTypeSymbol typeSymbol, bool callGenericMethodFromInterfaceMethod = false, INamespaceSymbol containingNamespace = null)
+        public void WriteTemplateDefinitionArguments(INamedTypeSymbol typeSymbolParam, bool callGenericMethodFromInterfaceMethod = false, INamespaceSymbol containingNamespace = null)
         {
+            var typeSymbol = typeSymbolParam.IsTupleType ? typeSymbolParam.TupleUnderlyingType : typeSymbolParam;
+
             var anyTypeParam = false;
             foreach (var typeParam in typeSymbol.GetTemplateArguments())
             {
@@ -1231,7 +1233,7 @@ namespace Il2Native.Logic
 
             this.WriteTypeName(type, allowKeywords, valueName, dependantScope: dependantScope, shortNested: shortNested, typeOfName: typeOfName);
 
-            if (type.IsGenericType || (type.IsAnonymousType && type.GetTemplateArguments().Any()))
+            if (type.IsGenericType || (type.IsAnonymousType && type.GetTemplateArguments().Any()) || type.IsTupleType)
             {
                 this.WriteTemplateDefinition(type, callGenericMethodFromInterfaceMethod: callGenericMethodFromInterfaceMethod, containingNamespace: containingNamespace);
             }
