@@ -810,6 +810,10 @@ namespace Il2Native.Logic
                 }
 
                 this.WriteType(methodSymbol.ReturnType, allowKeywords: true, containingNamespace: containingNamespace);
+                if (methodSymbol.ReturnsByRef)
+                {
+                    this.TextSpan("&");
+                }
             }
 
             this.WhiteSpace();

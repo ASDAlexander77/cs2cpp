@@ -89,8 +89,7 @@ namespace Il2Native.Logic.DOM2
                                     OperatorKind = BinaryOperatorKind.NotEqual
                                 },
                             Consequence = access,
-                            Alternative = new Literal { Value = ConstantValue.Create(null) }
-
+                            Alternative = new DefaultOperator { Type = this.WhenNotNull.Type }
                         }
                 });
 

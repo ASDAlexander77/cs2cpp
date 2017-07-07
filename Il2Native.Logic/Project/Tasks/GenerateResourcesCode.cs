@@ -144,7 +144,6 @@
             {
                 return;
             }
-
             this._keys[leftPart] = 0;
             StringBuilder stringBuilder = new StringBuilder(rightPart.Length);
             for (int i = 0; i < rightPart.Length; i++)
@@ -156,33 +155,64 @@
 
                 stringBuilder.Append(rightPart[i]);
             }
-
             if (this._targetLanguage == GenerateResourcesCode.TargetLanguage.CSharp)
             {
                 if (this.OmitResourceAccess)
                 {
-                    this._debugCode.AppendFormat(
-                        "        internal static string {0} {2}{4}              get {2} return (@\"{1}\" ?? \"{0}\"); {3}{4}        {3}{4}",
-                        leftPart,
-                        stringBuilder.ToString(),
-                        "{",
-                        "}",
-                        Environment.NewLine);
+                    this._debugCode.AppendFormat("        internal static string {0} {2}{4}              get {2} return (@\"{1}\" ?? \"{0}\"); {3}{4}        {3}{4}", new object[]
+                    {
+                    leftPart,
+                    stringBuilder.ToString(),
+                    "{",
+                    "}",
+                    Environment.NewLine
+                    });
                 }
                 else
                 {
-                    this._debugCode.AppendFormat(
-                        "        internal static string {0} {2}{4}              get {2} return SR.GetResourceString(\"{0}\", @\"{1}\"); {3}{4}        {3}{4}", 
-                        leftPart,
-                        stringBuilder.ToString(),
-                        "{",
-                        "}",
-                        Environment.NewLine);
+                    this._debugCode.AppendFormat("        internal static string {0} {2}{4}              get {2} return SR.GetResourceString(\"{0}\", @\"{1}\"); {3}{4}        {3}{4}", new object[]
+                    {
+                    leftPart,
+                    stringBuilder.ToString(),
+                    "{",
+                    "}",
+                    Environment.NewLine
+                    });
                 }
             }
             else
             {
                 this._debugCode.AppendFormat("        Friend Shared ReadOnly Property {0} As String{2}            Get{2}                Return SR.GetResourceString(\"{0}\", \"{1}\"){2}            End Get{2}        End Property{2}", leftPart, stringBuilder.ToString(), Environment.NewLine);
+            }
+            if (!this.DebugOnly)
+            {
+                if (this._targetLanguage == GenerateResourcesCode.TargetLanguage.CSharp)
+                {
+                    if (this.OmitResourceAccess)
+                    {
+                        this._targetStream.WriteLine("        internal static string {0} {2}{4}              get {2} return (@\"{1}\" ?? \"{0}\"); {3}{4}        {3}", new object[]
+                        {
+                            leftPart,
+                            stringBuilder.ToString(),
+                            "{",
+                            "}",
+                            Environment.NewLine
+                        });
+                    }
+                    else
+                    {
+                        this._targetStream.WriteLine("        internal static string {0} {2}{4}              get {2} return SR.GetResourceString(\"{0}\", {1}); {3}{4}        {3}", new object[]
+                        {
+                            leftPart,
+                            "null",
+                            "{",
+                            "}",
+                            Environment.NewLine
+                        });
+                    }
+                    return;
+                }
+                this._targetStream.WriteLine("        Friend Shared ReadOnly Property {0} As String{2}           Get{2}                 Return SR.GetResourceString(\"{0}\", {1}){2}            End Get{2}        End Property", leftPart, "Nothing", Environment.NewLine);
             }
         }
 
