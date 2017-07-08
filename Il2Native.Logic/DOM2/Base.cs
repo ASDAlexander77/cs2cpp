@@ -651,7 +651,7 @@ namespace Il2Native.Logic.DOM2
             var boundBlock = boundStatementList as BoundBlock;
             if (boundBlock != null)
             {
-                ParseLocals(boundBlock.Locals, statements, boundBlock.Syntax.Green is UsingStatementSyntax || boundBlock.Syntax.Green is FixedStatementSyntax || boundBlock.Syntax.Green is BlockSyntax);
+                ParseLocals(boundBlock.Locals, statements, boundBlock.Syntax.Green is UsingStatementSyntax || boundBlock.Syntax.Green is FixedStatementSyntax);
             }
 
             foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
@@ -700,8 +700,9 @@ namespace Il2Native.Logic.DOM2
                     if (local.SynthesizedKind == default(SynthesizedLocalKind)
                         && local.DeclarationKind != LocalDeclarationKind.FixedVariable
                         && local.DeclarationKind != LocalDeclarationKind.UsingVariable
-                        && !IsDeclarationWithoutInitializer(local)
-                        && local.DeclarationKind != LocalDeclarationKind.PatternVariable)
+                        && local.DeclarationKind != LocalDeclarationKind.PatternVariable
+                        && local.DeclarationKind != LocalDeclarationKind.OutVariable
+                        && !IsDeclarationWithoutInitializer(local))
                     {
                         continue;
                     }
