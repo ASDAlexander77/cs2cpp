@@ -651,7 +651,7 @@ namespace Il2Native.Logic.DOM2
             var boundBlock = boundStatementList as BoundBlock;
             if (boundBlock != null)
             {
-                ParseLocals(boundBlock.Locals, statements, boundBlock.Syntax.Green is UsingStatementSyntax || boundBlock.Syntax.Green is FixedStatementSyntax);
+                ParseLocals(boundBlock.Locals, statements, boundBlock.Syntax.Green is UsingStatementSyntax || boundBlock.Syntax.Green is FixedStatementSyntax || boundBlock.Syntax.Green is BlockSyntax);
             }
 
             foreach (var boundStatement in IterateBoundStatementsList(boundStatementList))
