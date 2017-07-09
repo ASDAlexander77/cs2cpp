@@ -183,7 +183,7 @@ namespace Il2Native.Logic.DOM2
             base.Parse(boundCall);
             this.SpecialCaseCreateInstanceNewObjectReplacement = boundCall.Method.IsCreateInstaneNewReplacement();
             this.Method = this.SpecialCaseCreateInstanceNewObjectReplacement ? GenerateNativeCreateInstanceMethod(boundCall.Method) : boundCall.Method;
-            if (boundCall.ReceiverOpt != null && boundCall.ReceiverOpt.Kind != BoundKind.ConditionalReceiver)
+            if (boundCall.ReceiverOpt != null)
             {
                 this.ReceiverOpt = Deserialize(boundCall.ReceiverOpt) as Expression;
                 // special case to avoid calling (*xxx).method() and replace with xxx->method();

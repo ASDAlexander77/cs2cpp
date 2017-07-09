@@ -15,9 +15,12 @@ namespace Il2Native.Logic.DOM2
             get { return Kinds.ConditionalReceiver; }
         }
 
+        public int Id { get; set; }
+
         internal void Parse(BoundConditionalReceiver boundConditionalReceiver)
         {
             base.Parse(boundConditionalReceiver);
+            this.Id = boundConditionalReceiver.Id;
         }
 
         internal override void Visit(Action<Base> visitor)
@@ -27,7 +30,7 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            // do nothing
+            new Local { LocalSymbol = new LocalImpl { Name = string.Concat("__ConditionalReceiver", this.Id), Type = Type } }.SetOwner(MethodOwner).WriteTo(c);
         }
     }
 }

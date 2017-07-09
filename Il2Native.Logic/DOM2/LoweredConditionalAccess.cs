@@ -19,18 +19,32 @@ namespace Il2Native.Logic.DOM2
 
         public Expression WhenNotNull { get; set; }
 
+        public Expression WhenNullOpt { get; set; }
+
+        public int Id { get; set; }
+
         internal void Parse(BoundLoweredConditionalAccess boundLoweredConditionalAccess)
         {
             base.Parse(boundLoweredConditionalAccess);
             this.Type = boundLoweredConditionalAccess.Receiver.Type;
             this.Receiver = Deserialize(boundLoweredConditionalAccess.Receiver) as Expression;
             this.WhenNotNull = Deserialize(boundLoweredConditionalAccess.WhenNotNull) as Expression;
+            this.Id = boundLoweredConditionalAccess.Id;
+            if (boundLoweredConditionalAccess.WhenNullOpt != null)
+            {
+                this.WhenNullOpt = Deserialize(boundLoweredConditionalAccess.WhenNullOpt) as Expression;
+            }
         }
 
         internal override void Visit(Action<Base> visitor)
         {
             this.Receiver.Visit(visitor);
             this.WhenNotNull.Visit(visitor);
+            if (this.WhenNullOpt != null)
+            {
+                this.WhenNullOpt.Visit(visitor);
+            }
+
             base.Visit(visitor);
         }
 
@@ -38,37 +52,22 @@ namespace Il2Native.Logic.DOM2
         {
             // Finish it properly
 
-            var localImpl = new LocalImpl { Name = "__ConditionalAccess", Type = Type };
+            var localImpl = new LocalImpl { Name = string.Concat("__ConditionalReceiver", this.Id), Type = Type };
             var local = new Local { LocalSymbol = localImpl };
 
             var block = new Block();
-            block.Statements.Add(new VariableDeclaration { Local = local });
             block.Statements.Add(
                 new ExpressionStatement
                 {
                     Expression =
                         new AssignmentOperator
                         {
+                            ApplyAutoType = true,
+                            TypeDeclaration = true,
                             Left = local,
                             Right = this.Receiver
                         }
                 });
-
-            // prepare access expression;
-            Expression access = new Access { ReceiverOpt = local, Expression = this.WhenNotNull };
-            var call = this.WhenNotNull as Call;
-            if (call != null)
-            {
-                access = call;
-                call.ReceiverOpt = local;
-            }
-
-            var fieldAccess = this.WhenNotNull as FieldAccess;
-            if (fieldAccess != null)
-            {
-                access = fieldAccess;
-                fieldAccess.ReceiverOpt = local;
-            }
 
             block.Statements.Add(
                 new ReturnStatement
@@ -88,26 +87,15 @@ namespace Il2Native.Logic.DOM2
                                     Right = new Literal { Value = ConstantValue.Create(null) },
                                     OperatorKind = BinaryOperatorKind.NotEqual
                                 },
-                            Consequence = access,
-                            Alternative = new DefaultOperator { Type = this.WhenNotNull.Type }
+                            Consequence = this.WhenNotNull,
+                            Alternative = this.WhenNullOpt ?? new DefaultOperator { Type = this.WhenNotNull.Type }
                         }
                 });
 
             new LambdaCall
             {
                 Lambda = new LambdaExpression { Statements = block, Type = Type }
-            }.WriteTo(c);
-
-            // clean up
-            if (call != null)
-            {
-                call.ReceiverOpt = null;
-            }
-
-            if (fieldAccess != null)
-            {
-                fieldAccess.ReceiverOpt = null;
-            }
+            }.SetOwner(MethodOwner).WriteTo(c);
         }
     }
 }

@@ -1322,7 +1322,7 @@ namespace Il2Native.Logic
                 this.WriteName(type, type.TypeKind == TypeKind.Unknown);
             }
 
-            if (valueName && type.TypeKind == TypeKind.Enum)
+            if (valueName && !typeOfName && type.TypeKind == TypeKind.Enum)
             {
                 this.TextSpan("__enum");
             }
