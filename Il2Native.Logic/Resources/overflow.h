@@ -116,6 +116,28 @@ inline int64_t __add_ovf(int64_t a, int64_t b)
 	return s;
 }
 
+template <typename P, typename T>
+inline P* __add_ovf(P* p, T off)
+{
+	auto s = p + off;
+	if (off >= 0)
+	{
+		if (s < p)
+		{
+			throw __new<::CoreLib::System::OverflowException>();
+		}
+	}
+	else
+	{
+		if (s >= p)
+		{
+			throw __new<::CoreLib::System::OverflowException>();
+		}
+	}
+
+	return s;
+}
+
 template < typename T > inline T __add_ovf_un(T a, T b)
 {
 	if ((T)-1 - (T)a <= (T) b)

@@ -52,7 +52,7 @@ namespace Il2Native.Logic.DOM2
         {
             // Finish it properly
 
-            var localImpl = new LocalImpl { Name = string.Concat("__ConditionalReceiver", this.Id), Type = Type };
+            var localImpl = new LocalImpl { Name = ConditionalReceiver.GetName(this.Id), Type = Type };
             var local = new Local { LocalSymbol = localImpl };
 
             var block = new Block();

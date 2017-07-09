@@ -17,6 +17,11 @@ namespace Il2Native.Logic.DOM2
 
         public int Id { get; set; }
 
+        public static string GetName(int id)
+        {
+            return string.Concat("__ConditionalReceiver", id);
+        }
+
         internal void Parse(BoundConditionalReceiver boundConditionalReceiver)
         {
             base.Parse(boundConditionalReceiver);
@@ -30,7 +35,7 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            new Local { LocalSymbol = new LocalImpl { Name = string.Concat("__ConditionalReceiver", this.Id), Type = Type } }.SetOwner(MethodOwner).WriteTo(c);
+            new Local { LocalSymbol = new LocalImpl { Name = GetName(this.Id), Type = Type } }.SetOwner(MethodOwner).WriteTo(c);
         }
     }
 }

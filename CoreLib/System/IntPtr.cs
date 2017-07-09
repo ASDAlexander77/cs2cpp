@@ -10,35 +10,35 @@ namespace System
     [System.Runtime.InteropServices.ComVisible(true)]
     public struct IntPtr
     {
-        unsafe private void* m_value; 
+        unsafe private void* _value; 
 
         public static readonly IntPtr Zero;
 
         internal unsafe bool IsNull()
         {
-            return (this.m_value == null);
+            return (this._value == null);
         }
 
         public unsafe IntPtr(int value)
         {
-            m_value = (void *)value;
+            _value = (void *)value;
         }
 
         public unsafe IntPtr(long value)
         {
-            m_value = (void*)value;
+            _value = (void*)value;
         }
 
         public unsafe IntPtr(void* value)
         {
-            m_value = value;
+            _value = value;
         }
 
         public unsafe override bool Equals(Object obj)
         {
             if (obj is IntPtr)
             {
-                return (m_value == ((IntPtr)obj).m_value);
+                return (_value == ((IntPtr)obj)._value);
             }
 
             return false;
@@ -46,27 +46,27 @@ namespace System
 
         public unsafe override int GetHashCode()
         {
-            return unchecked((int)((long)m_value));
+            return unchecked((int)((long)_value));
         }
 
         public unsafe int ToInt32()
         {
-            return (int)m_value;
+            return (int)_value;
         }
 
         public unsafe long ToInt64()
         {
-            return (long)(int)m_value;
+            return (long)(int)_value;
         }
 
         public unsafe override String ToString()
         {
-            return ((int)m_value).ToString();
+            return ((int)_value).ToString();
         }
 
         public unsafe String ToString(String format)
         {
-            return ((int)m_value).ToString(format);
+            return ((int)_value).ToString(format);
         }
 
         public static explicit operator IntPtr(int value)
@@ -91,22 +91,22 @@ namespace System
 
         public unsafe static explicit operator int(IntPtr value)
         {
-            return (int)value.m_value;
+            return (int)value._value;
         }
 
         public unsafe static explicit operator long(IntPtr value)
         {
-            return (long)(int)value.m_value;
+            return (long)(int)value._value;
         }
 
         public unsafe static bool operator ==(IntPtr value1, IntPtr value2)
         {
-            return value1.m_value == value2.m_value;
+            return value1._value == value2._value;
         }
 
         public unsafe static bool operator !=(IntPtr value1, IntPtr value2)
         {
-            return value1.m_value != value2.m_value;
+            return value1._value != value2._value;
         }
 
         public static IntPtr Add(IntPtr pointer, int offset)
@@ -142,7 +142,7 @@ namespace System
 
         public unsafe void* ToPointer()
         {
-            return m_value;
+            return _value;
         }
     }
 }
