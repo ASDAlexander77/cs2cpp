@@ -89,8 +89,20 @@ inline typename std::enable_if<std::is_same<D, S>::value, D>::type constrained (
 	return s;
 }
 
+template <typename D, typename S>
+inline typename std::enable_if<std::is_same<D, S>::value, D>::type constrained_ref(S& s)
+{
+	return s;
+}
+
 template <typename D, typename S> 
 inline typename std::enable_if<is_class_type<S>::value && !std::is_same<D, S>::value && !is_interface_type<D>::value, D>::type constrained (S s)
+{
+	return static_cast<D>(s);
+}
+
+template <typename D, typename S>
+inline typename std::enable_if<is_class_type<S>::value && !std::is_same<D, S>::value && !is_interface_type<D>::value, D>::type constrained_ref(S& s)
 {
 	return static_cast<D>(s);
 }
@@ -127,6 +139,12 @@ inline typename std::enable_if<is_interface_type<S>::value && is_interface_type<
 
 template <typename D, typename S> 
 inline typename std::enable_if<is_value_type<S>::value && is_class_type<D>::value, D>::type constrained (S s)
+{
+	return __box(s);
+}
+
+template <typename D, typename S>
+inline typename std::enable_if<is_value_type<S>::value && is_class_type<D>::value, D>::type constrained_ref(S& s)
 {
 	return __box(s);
 }
