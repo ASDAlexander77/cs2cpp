@@ -1173,6 +1173,30 @@ inline bool operator ==(const T& left, const T& right)
 	return std::memcmp((void*)&left, (void*)&right, sizeof(T)) == 0;
 }
 
+template < typename T >
+inline bool operator != (::CoreLib::System::NullableT1<T>& p1, std::nullptr_t p2)
+{
+	return p1.get_HasValue();
+}
+
+template < typename T >
+inline bool operator != (std::nullptr_t p2, ::CoreLib::System::NullableT1<T>& p1)
+{
+	return p1.get_HasValue();
+}
+
+template < typename T >
+inline bool operator == (::CoreLib::System::NullableT1<T>& p1, std::nullptr_t p2)
+{
+	return !p1.get_HasValue();
+}
+
+template < typename T >
+inline bool operator == (std::nullptr_t p2, ::CoreLib::System::NullableT1<T>& p1)
+{
+	return !p1.get_HasValue();
+}
+
 // string helpers
 inline string* __utf8_to_string(char* str)
 {
