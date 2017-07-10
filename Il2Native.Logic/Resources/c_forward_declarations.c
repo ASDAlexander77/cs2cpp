@@ -351,7 +351,7 @@ template <typename T> struct __unbound_generic_type
 
 // Default
 template <typename T> 
-inline typename std::enable_if<std::is_pointer<T>::value, T>::type __default()
+constexpr typename std::enable_if<std::is_pointer<T>::value, T>::type __default()
 {
 	return nullptr;
 }
@@ -363,13 +363,13 @@ inline typename std::enable_if<is_struct_type<T>::value, T>::type __default()
 }
 
 template <typename T> 
-inline typename std::enable_if<is_primitive_type<T>::value, T>::type __default()
+constexpr typename std::enable_if<is_primitive_type<T>::value, T>::type __default()
 {
 	return T();
 }
 
 template <typename T> 
-inline typename std::enable_if<std::is_void<T>::value, T>::type __default()
+constexpr typename std::enable_if<std::is_void<T>::value, T>::type __default()
 {
 	return;
 }

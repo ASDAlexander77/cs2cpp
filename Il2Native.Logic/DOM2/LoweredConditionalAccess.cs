@@ -26,7 +26,7 @@ namespace Il2Native.Logic.DOM2
         internal void Parse(BoundLoweredConditionalAccess boundLoweredConditionalAccess)
         {
             base.Parse(boundLoweredConditionalAccess);
-            this.Type = boundLoweredConditionalAccess.Receiver.Type;
+            this.Type = boundLoweredConditionalAccess.Type;
             this.Receiver = Deserialize(boundLoweredConditionalAccess.Receiver) as Expression;
             this.WhenNotNull = Deserialize(boundLoweredConditionalAccess.WhenNotNull) as Expression;
             this.Id = boundLoweredConditionalAccess.Id;
@@ -88,7 +88,7 @@ namespace Il2Native.Logic.DOM2
                                     OperatorKind = BinaryOperatorKind.NotEqual
                                 },
                             Consequence = this.WhenNotNull,
-                            Alternative = this.WhenNullOpt ?? new DefaultOperator { Type = this.WhenNotNull.Type }
+                            Alternative = this.WhenNullOpt ?? new DefaultOperator { Type = Type }
                         }
                 });
 
