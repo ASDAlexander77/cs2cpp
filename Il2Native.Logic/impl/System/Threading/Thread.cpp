@@ -50,7 +50,7 @@ namespace CoreLib {
 
 				int32_t threadId;
 #ifndef GC_PTHREADS
-				this->DONT_USE_InternalThread.m_value = CreateThread(
+				this->DONT_USE_InternalThread._value = CreateThread(
 					nullptr,                // default security attributes
 					0,                      // use default stack size  
 					(LPTHREAD_START_ROUTINE)__thread_inner_proc,    // thread function name
@@ -60,7 +60,7 @@ namespace CoreLib {
 #else
 				auto t = __new_set0(sizeof(pthread_t), true);
 				pthread_create((pthread_t *)t, 0, __thread_inner_proc, this);
-				this->DONT_USE_InternalThread.m_value = t;
+				this->DONT_USE_InternalThread._value = t;
 #endif
 			}
 
