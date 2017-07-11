@@ -46,6 +46,7 @@ namespace Il2Native.Logic.DOM2
             switch (lbl)
             {
                 case "stateMachine":
+                case "tryDispatch":
                 case "continue":
                 case "break":
                 case "afterif":

@@ -1036,7 +1036,8 @@ inline typename std::enable_if<is_pointer_type<T>::value, T>::type __unbox(objec
 }
 
 // box - by ref
-template <typename T> inline object* __box_ref_t (T* t)
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type>
+inline _CLASS* __box_ref_t (T* t)
 {
 	return __box(*t);
 }

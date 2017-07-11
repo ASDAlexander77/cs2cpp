@@ -5,7 +5,10 @@
 
     public sealed class Activator
     {
-        public static extern T CreateInstance<T>();
+        public static T CreateInstance<T>()
+        {
+            throw new NotImplementedException();
+        }
 
         public static object CreateInstance(Type runtimeType, BindingFlags bindingFlags, Binder binder, object[] providedArgs, CultureInfo culture)
         {
