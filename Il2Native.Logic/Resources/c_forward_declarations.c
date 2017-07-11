@@ -9,14 +9,14 @@ enum class GCAtomic
 };
 
 // map valuetype to class
-template<typename T> 
+template<typename T>
 struct valuetype_to_class { typedef T type; };
 
 // map class to valuetype
-template<typename T> 
+template<typename T>
 struct class_to_valuetype { typedef T type; };
 
-template<typename T> 
+template<typename T>
 struct gc_traits { constexpr static const GCNormal value = GCNormal::Default; };
 
 template<typename T>
@@ -25,38 +25,38 @@ struct type_holder { typedef T type; };
 template <typename T> struct convert_primitive_type_to_class
 {
 	typedef
-		typename std::conditional< std::is_same< T, void >::value, ::CoreLib::System::Void, 
-		typename std::conditional< std::is_same< T, int8_t >::value, ::CoreLib::System::SByte, 
-		typename std::conditional< std::is_same< T, uint8_t >::value, ::CoreLib::System::Byte, 
-		typename std::conditional< std::is_same< T, int16_t >::value, ::CoreLib::System::Int16, 
-		typename std::conditional< std::is_same< T, uint16_t >::value, ::CoreLib::System::UInt16, 
-		typename std::conditional< std::is_same< T, char16_t >::value, ::CoreLib::System::Char, 
-		typename std::conditional< std::is_same< T, int32_t >::value, ::CoreLib::System::Int32, 
-		typename std::conditional< std::is_same< T, uint32_t >::value, ::CoreLib::System::UInt32, 
-		typename std::conditional< std::is_same< T, int64_t >::value, ::CoreLib::System::Int64, 
-		typename std::conditional< std::is_same< T, uint64_t >::value, ::CoreLib::System::UInt64, 
-		typename std::conditional< std::is_same< T, float >::value, ::CoreLib::System::Single, 
-		typename std::conditional< std::is_same< T, double >::value, ::CoreLib::System::Double, 
-		T 
+		typename std::conditional< std::is_same< T, void >::value, ::CoreLib::System::Void,
+		typename std::conditional< std::is_same< T, int8_t >::value, ::CoreLib::System::SByte,
+		typename std::conditional< std::is_same< T, uint8_t >::value, ::CoreLib::System::Byte,
+		typename std::conditional< std::is_same< T, int16_t >::value, ::CoreLib::System::Int16,
+		typename std::conditional< std::is_same< T, uint16_t >::value, ::CoreLib::System::UInt16,
+		typename std::conditional< std::is_same< T, char16_t >::value, ::CoreLib::System::Char,
+		typename std::conditional< std::is_same< T, int32_t >::value, ::CoreLib::System::Int32,
+		typename std::conditional< std::is_same< T, uint32_t >::value, ::CoreLib::System::UInt32,
+		typename std::conditional< std::is_same< T, int64_t >::value, ::CoreLib::System::Int64,
+		typename std::conditional< std::is_same< T, uint64_t >::value, ::CoreLib::System::UInt64,
+		typename std::conditional< std::is_same< T, float >::value, ::CoreLib::System::Single,
+		typename std::conditional< std::is_same< T, double >::value, ::CoreLib::System::Double,
+		T
 		>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
 };
 
 template <typename T> struct convert_class_to_primitive_type
 {
 	typedef
-		typename std::conditional< std::is_same< T, ::CoreLib::System::Void >::value, void, 
-		typename std::conditional< std::is_same< T, ::CoreLib::System::SByte >::value, int8_t, 
-		typename std::conditional< std::is_same< T, ::CoreLib::System::Byte >::value, uint8_t, 
-		typename std::conditional< std::is_same< T, ::CoreLib::System::Int16 >::value, int16_t, 
-		typename std::conditional< std::is_same< T, ::CoreLib::System::UInt16 >::value, uint16_t, 
-		typename std::conditional< std::is_same< T, ::CoreLib::System::Char >::value, char16_t, 
-		typename std::conditional< std::is_same< T, ::CoreLib::System::Int32 >::value, int32_t, 
-		typename std::conditional< std::is_same< T, ::CoreLib::System::UInt32 >::value, uint32_t, 
-		typename std::conditional< std::is_same< T, ::CoreLib::System::Int64 >::value, int64_t, 
-		typename std::conditional< std::is_same< T, ::CoreLib::System::UInt64 >::value, uint64_t, 
-		typename std::conditional< std::is_same< T, ::CoreLib::System::Single >::value, float, 
-		typename std::conditional< std::is_same< T, ::CoreLib::System::Double >::value, double, 
-		T 
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Void >::value, void,
+		typename std::conditional< std::is_same< T, ::CoreLib::System::SByte >::value, int8_t,
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Byte >::value, uint8_t,
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Int16 >::value, int16_t,
+		typename std::conditional< std::is_same< T, ::CoreLib::System::UInt16 >::value, uint16_t,
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Char >::value, char16_t,
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Int32 >::value, int32_t,
+		typename std::conditional< std::is_same< T, ::CoreLib::System::UInt32 >::value, uint32_t,
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Int64 >::value, int64_t,
+		typename std::conditional< std::is_same< T, ::CoreLib::System::UInt64 >::value, uint64_t,
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Single >::value, float,
+		typename std::conditional< std::is_same< T, ::CoreLib::System::Double >::value, double,
+		T
 		>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type>::type type;
 };
 
@@ -101,14 +101,58 @@ template< typename T > struct remove_nullable { typedef T type; };
 template< typename T > struct remove_nullable<::CoreLib::System::NullableT1<T>> { typedef T type; };
 template< typename T > struct remove_nullable<::CoreLib::System::NullableT1<T>*> { typedef T type; };
 
+// helpers to resolve issue with using class members with generic parameters with members without generic params but with the same value as generic parameter
+template < typename T >
+struct __Conflict {};
+
+template <bool B, class T = void>
+struct __enable_if { typedef __Conflict<T> type; };
+
+template <class T>
+struct __enable_if<true, T> { typedef T type; };
+
+/* Example: 
+template <typename T>
+class Lazy
+{
+public:
+	void _ctor(bool b);
+	void _ctor(typename __enable_if<!std::is_same<T, bool>::value, T>::type);
+};
+
+template <typename T>
+void Lazy<T>::_ctor(bool b)
+{
+	std::cout << "bool " << b << std::endl;
+};
+
+template <typename T>
+void Lazy<T>::_ctor(typename __enable_if<!std::is_same<T, bool>::value, T>::type t)
+{
+	std::cout << "T " << t << std::endl;
+};
+
+int main(int argc, char **argv)
+{
+	Lazy<int> i;
+	i._ctor(10);
+	i._ctor(true);
+
+	Lazy<bool> b;
+	b._ctor(true);
+
+	return 0;
+}
+*/
+
 extern void GC_CALLBACK __finalizer(void * obj, void * client_data);
 
 void throw_out_of_memory();
 
 inline void* __new_set0(size_t _size)
 {
-	auto mem = _size > 102400 
-		? GC_MALLOC_IGNORE_OFF_PAGE(_size) 
+	auto mem = _size > 102400
+		? GC_MALLOC_IGNORE_OFF_PAGE(_size)
 		: GC_MALLOC(_size);
 	if (!mem)
 	{
@@ -125,8 +169,8 @@ inline void* __new_set0(size_t _size, GCNormal)
 
 inline void* __new_set0(size_t _size, GCAtomic)
 {
-	auto mem = _size > 102400 
-		? GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(_size) 
+	auto mem = _size > 102400
+		? GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE(_size)
 		: GC_MALLOC_ATOMIC(_size);
 	if (!mem)
 	{
@@ -139,8 +183,8 @@ inline void* __new_set0(size_t _size, GCAtomic)
 
 inline void* __new_set0(size_t _size, GC_descr _type_descr)
 {
-	auto mem = _size > 102400 
-		? GC_malloc_explicitly_typed_ignore_off_page(_size, _type_descr) 
+	auto mem = _size > 102400
+		? GC_malloc_explicitly_typed_ignore_off_page(_size, _type_descr)
 		: GC_MALLOC_EXPLICITLY_TYPED(_size, _type_descr);
 	if (!mem)
 	{
@@ -182,8 +226,8 @@ inline void* __new_set0_with_finalizer(size_t _size, GC_descr _type_descr)
 inline void* __new_set0(size_t _size, const char* _file, int _line)
 {
 #ifdef GC_DEBUG
-	auto mem = _size > 102400 
-		? GC_debug_malloc_ignore_off_page(_size, GC_ALLOC_PARAMS) 
+	auto mem = _size > 102400
+		? GC_debug_malloc_ignore_off_page(_size, GC_ALLOC_PARAMS)
 		: GC_debug_malloc(_size, GC_ALLOC_PARAMS);
 	if (!mem)
 	{
@@ -208,8 +252,8 @@ inline void* __new_set0(size_t _size, GCNormal, const char* _file, int _line)
 inline void* __new_set0(size_t _size, GCAtomic, const char* _file, int _line)
 {
 #ifdef GC_DEBUG
-	auto mem = _size > 102400 
-		? GC_debug_malloc_atomic_ignore_off_page(_size, GC_ALLOC_PARAMS) 
+	auto mem = _size > 102400
+		? GC_debug_malloc_atomic_ignore_off_page(_size, GC_ALLOC_PARAMS)
 		: GC_debug_malloc_atomic(_size, GC_ALLOC_PARAMS);
 	if (!mem)
 	{
@@ -225,8 +269,8 @@ inline void* __new_set0(size_t _size, GCAtomic, const char* _file, int _line)
 inline void* __new_set0(size_t _size, GC_descr _type_descr, const char* _file, int _line)
 {
 #ifdef GC_DEBUG
-	auto mem = _size > 102400 
-		? GC_debug_malloc_ignore_off_page(_size, GC_ALLOC_PARAMS) 
+	auto mem = _size > 102400
+		? GC_debug_malloc_ignore_off_page(_size, GC_ALLOC_PARAMS)
 		: GC_debug_malloc(_size, GC_ALLOC_PARAMS);
 	if (!mem)
 	{
@@ -287,26 +331,26 @@ void* operator new (size_t _size, GC_descr _type_descr, const char* _file, int _
 void* operator new (size_t _size, int32_t _customSize, GC_descr _type_descr);
 void* operator new (size_t _size, int32_t _customSize, GC_descr _type_descr, const char* _file, int _line);
 
-template <typename T, typename... Tp> inline T* __new(Tp... params) 
+template <typename T, typename... Tp> inline T* __new(Tp... params)
 {
-	auto t = new T();		
+	auto t = new T();
 	t->_ctor(params...);
 	return t;
-} 
+}
 
-template <typename T, typename... Tp> inline T* __new_debug(const char* _file, int _line, Tp... params) 
+template <typename T, typename... Tp> inline T* __new_debug(const char* _file, int _line, Tp... params)
 {
 	auto t = new (_file, _line) T();
 	t->_ctor(params...);
 	return t;
-} 
+}
 
-template <typename T, typename... Tp> inline T __init(Tp... params) 
+template <typename T, typename... Tp> inline T __init(Tp... params)
 {
-	auto t = T();		
+	auto t = T();
 	t._ctor(params...);
 	return t;
-} 
+}
 
 template <typename T> class __array;
 template <typename T, int32_t RANK> class __multi_array;
@@ -314,7 +358,7 @@ template <typename T> struct __pointer;
 
 template <typename T, typename TUnderlying> struct __enum
 {
-public: 
+public:
 	TUnderlying _value;
 	__enum() = default;
 	inline __enum(TUnderlying value) : _value(value) {}
@@ -350,32 +394,32 @@ template <typename T> struct __unbound_generic_type
 };
 
 // Default
-template <typename T> 
+template <typename T>
 constexpr typename std::enable_if<std::is_pointer<T>::value, T>::type __default()
 {
 	return nullptr;
 }
 
-template <typename T> 
+template <typename T>
 inline typename std::enable_if<is_struct_type<T>::value, T>::type __default()
 {
 	return __init<T>();
 }
 
-template <typename T> 
+template <typename T>
 constexpr typename std::enable_if<is_primitive_type<T>::value, T>::type __default()
 {
 	return T();
 }
 
-template <typename T> 
+template <typename T>
 constexpr typename std::enable_if<std::is_void<T>::value, T>::type __default()
 {
 	return;
 }
 
 template< typename T >
-struct __volatile_t 
+struct __volatile_t
 {
 	volatile T t;
 public:
@@ -471,7 +515,7 @@ public:
 };
 
 template< typename T, typename C >
-struct __static 
+struct __static
 {
 	T t;
 public:
@@ -622,9 +666,9 @@ public:
 		_interlocked_exchange(&t, value);
 	}
 
-	inline __static_volatile() 
-	{ 
-		__write(__default<T>()); 
+	inline __static_volatile()
+	{
+		__write(__default<T>());
 	}
 
 	inline void ensure_cctor_called()
@@ -748,14 +792,14 @@ template <typename T> constexpr __methods_table* _typeMT()
 }
 
 // object cast (interface etc)
-template <typename T> 
-inline typename std::enable_if<!is_interface_type<T>::value, object*>::type object_cast (T t)
+template <typename T>
+inline typename std::enable_if<!is_interface_type<T>::value, object*>::type object_cast(T t)
 {
 	return static_cast<object*>(t);
 }
 
-template <typename T> 
-inline typename std::enable_if<is_interface_type<T>::value, object*>::type object_cast (T t)
+template <typename T>
+inline typename std::enable_if<is_interface_type<T>::value, object*>::type object_cast(T t)
 {
 	if (t == nullptr)
 	{
@@ -766,8 +810,8 @@ inline typename std::enable_if<is_interface_type<T>::value, object*>::type objec
 }
 
 // interface cast
-template <typename C, typename T> 
-inline typename std::enable_if<!is_value_type<T>::value, C>::type interface_cast (T t)
+template <typename C, typename T>
+inline typename std::enable_if<!is_value_type<T>::value, C>::type interface_cast(T t)
 {
 	if (t == nullptr)
 	{
@@ -783,8 +827,8 @@ inline typename std::enable_if<is_value_type<T>::value, C>::type interface_cast(
 	return t->operator C();
 }
 
-template <typename C, typename T> 
-inline typename std::enable_if<!is_interface_type<T>::value, C>::type dynamic_interface_cast (T t)
+template <typename C, typename T>
+inline typename std::enable_if<!is_interface_type<T>::value, C>::type dynamic_interface_cast(T t)
 {
 	if (t == nullptr)
 	{
@@ -794,8 +838,8 @@ inline typename std::enable_if<!is_interface_type<T>::value, C>::type dynamic_in
 	return reinterpret_cast<C>(t->__get_interface(_typeof<C>()));
 }
 
-template <typename C, typename T> 
-inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_interface_cast (T t)
+template <typename C, typename T>
+inline typename std::enable_if<is_interface_type<T>::value, C>::type dynamic_interface_cast(T t)
 {
 	if (t == nullptr)
 	{
@@ -883,7 +927,7 @@ template <typename D, typename S> inline typename std::enable_if<is_object<D>::v
 	return object_cast(s);
 }
 
-template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> 
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type>
 inline typename std::enable_if<is_value_type<T>::value, _CLASS>::type cast(object* o)
 {
 	return *cast<_CLASS*>(o);
@@ -896,23 +940,23 @@ template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T
 	return new T(t);
 }
 
-template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box (T t)
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box(T t)
 {
 	return __new<_CLASS>(t);
 }
 
-template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value && !is_pointer_type<T>::value, T>::type __box (T t)
+template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value && !is_pointer_type<T>::value, T>::type __box(T t)
 {
 	return t;
 }
 
-template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box (T t)
+template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box(T t)
 {
 	return object_cast(t);
 }
 
 object* __box_pointer(void* p);
-template <typename T> inline typename std::enable_if<is_pointer_type<T>::value, object*>::type __box (T t)
+template <typename T> inline typename std::enable_if<is_pointer_type<T>::value, object*>::type __box(T t)
 {
 	return __box_pointer((void*)t);
 }
@@ -929,33 +973,33 @@ template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> in
 }
 
 // box - DEBUG
-template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box_debug (const char* _file, int _line, T t)
+template <typename T> inline typename std::enable_if<is_struct_type<T>::value, T>::type* __box_debug(const char* _file, int _line, T t)
 {
 	// we do not need to call __new here as it already constructed
 	return new (_file, _line) T(t);
 }
 
-template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box_debug (const char* _file, int _line, T t)
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline typename std::enable_if<is_value_type<T>::value && !is_struct_type<T>::value && !is_interface_type<T>::value, _CLASS>::type* __box_debug(const char* _file, int _line, T t)
 {
 	return __new_debug<_CLASS>(_file, _line, t);
 }
 
-template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value && !is_pointer_type<T>::value, T>::type __box_debug (const char* _file, int _line, T t)
+template <typename T> inline typename std::enable_if<!is_value_type<T>::value && !is_interface_type<T>::value && !is_pointer_type<T>::value, T>::type __box_debug(const char* _file, int _line, T t)
 {
 	return t;
 }
 
-template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box_debug (const char* _file, int _line, T t)
+template <typename T> inline typename std::enable_if<is_interface_type<T>::value, object*>::type __box_debug(const char* _file, int _line, T t)
 {
 	return object_cast(t);
 }
 
-template <typename T> inline typename std::enable_if<is_pointer_type<T>::value, object*>::type __box_debug (const char* _file, int _line, T t)
+template <typename T> inline typename std::enable_if<is_pointer_type<T>::value, object*>::type __box_debug(const char* _file, int _line, T t)
 {
 	return __box_pointer((void*)t);
 }
 
-template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline _CLASS* __box_debug (const char* _file, int _line, ::CoreLib::System::NullableT1<T> t)
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline _CLASS* __box_debug(const char* _file, int _line, ::CoreLib::System::NullableT1<T> t)
 {
 	if (!t.get_HasValue())
 	{
@@ -989,13 +1033,13 @@ inline typename std::enable_if<is_nullable_type<T>::value, T>::type __unbox(T* t
 	return __default<T>();
 }
 
-template <typename T> 
+template <typename T>
 inline typename std::enable_if<is_class_type<T>::value, T>::type __unbox(object* o)
 {
 	return cast<T>(o);
 }
 
-template <typename T, typename _CLASS = typename valuetype_to_class<T>::type, typename _VAL = typename class_to_valuetype<T>::type> 
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type, typename _VAL = typename class_to_valuetype<T>::type>
 inline typename std::enable_if<!is_nullable_type<T>::value && is_value_type<T>::value, _VAL>::type __unbox(object* o)
 {
 	return *cast<_CLASS*>(o);
@@ -1016,34 +1060,34 @@ inline typename std::enable_if<is_nullable_type<T>::value && is_value_type<T>::v
 	return __default<T>();
 }
 
-template <typename T> 
+template <typename T>
 inline typename std::enable_if<is_interface_type<T>::value || is_pointer_type<T>::value, T>::type __unbox(T t)
 {
 	return t;
 }
 
-template <typename T> 
+template <typename T>
 inline typename std::enable_if<is_interface_type<T>::value, T>::type __unbox(object* o)
 {
 	return dynamic_interface_cast_or_throw<T>(o);
 }
 
 void* __unbox_pointer(object* obj);
-template <typename T> 
+template <typename T>
 inline typename std::enable_if<is_pointer_type<T>::value, T>::type __unbox(object* o)
 {
-	return (T) __unbox_pointer(o);
+	return (T)__unbox_pointer(o);
 }
 
 // box - by ref
 template <typename T, typename _CLASS = typename valuetype_to_class<T>::type>
-inline _CLASS* __box_ref_t (T* t)
+inline _CLASS* __box_ref_t(T* t)
 {
 	return __box(*t);
 }
 
 // unbox - to address
-template <typename T> 
+template <typename T>
 inline void __unbox_to_t(T* t, object* val)
 {
 	*t = __unbox<T>(val);

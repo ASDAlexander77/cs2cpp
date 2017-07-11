@@ -1177,6 +1177,50 @@ namespace Il2Native.Logic
             }
         }
 
+        public static bool IsConflictingGenericParameter(this IParameterSymbol parameterSymbol)
+        {
+            if (!parameterSymbol.Type.IsGenericTypeDefinition())
+            {
+                return false;
+            }
+
+            if (parameterSymbol.ContainingType == null)
+            {
+                // TODO: you can remove it to clean up of ParameterImpl class
+                return false;
+            }
+
+            var method = parameterSymbol.ContainingSymbol as IMethodSymbol;
+            if (method == null)
+            {
+                return false;
+            }
+
+            // find all methods with the same name and parameters cound
+            var conflics = parameterSymbol.ContainingType
+                .GetMembers()
+                .OfType<IMethodSymbol>()
+                .Where(m => m.Name == method.Name && method.Parameters.Length == m.Parameters.Length && !m.Parameters[parameterSymbol.Ordinal].Type.IsGenericTypeDefinition());
+
+            return conflics.Any();
+        }
+
+        public static bool IsGenericTypeDefinition(this ITypeSymbol typeSymbol)
+        {
+            if (typeSymbol.TypeKind == TypeKind.TypeParameter)
+            {
+                return true;
+            }
+
+            var namedTypeSymbol = typeSymbol as INamedTypeSymbol;
+            if (namedTypeSymbol == null)
+            {
+                return false;
+            }
+
+            return namedTypeSymbol.IsGenericType && !namedTypeSymbol.TypeArguments.Any(t => !t.IsGenericTypeDefinition());
+        }
+
         internal static bool NeedsLabel(this LabelSymbol label, string name)
         {
             var labelName = label.Name;

@@ -611,6 +611,8 @@ namespace Il2Native.Logic
 
             foreach (var parameterSymbol in methodSymbol.Parameters)
             {
+                var isConflictingGenericParameter = parameterSymbol.IsConflictingGenericParameter();
+
                 if (anyParameter)
                 {
                     this.TextSpan(", ");
