@@ -1179,7 +1179,9 @@ namespace Il2Native.Logic
 
         public static IEnumerable<ITypeSymbol> GetConflictingGenericParameterTypes(this IParameterSymbol parameterSymbol)
         {
-            if (!parameterSymbol.Type.IsGenericTypeDefinition())
+            // TODO: can be improved when working with generic types
+            ////if (!parameterSymbol.Type.IsGenericTypeDefinition())
+            if (parameterSymbol.Type.TypeKind != TypeKind.TypeParameter)
             {
                 yield break;
             }
