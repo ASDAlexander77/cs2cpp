@@ -1177,32 +1177,35 @@ namespace Il2Native.Logic
             }
         }
 
-        public static bool IsConflictingGenericParameter(this IParameterSymbol parameterSymbol)
+        public static IEnumerable<ITypeSymbol> GetConflictingGenericParameterTypes(this IParameterSymbol parameterSymbol)
         {
             if (!parameterSymbol.Type.IsGenericTypeDefinition())
             {
-                return false;
+                yield break;
             }
 
             if (parameterSymbol.ContainingType == null)
             {
                 // TODO: you can remove it to clean up of ParameterImpl class
-                return false;
+                yield break;
             }
 
             var method = parameterSymbol.ContainingSymbol as IMethodSymbol;
             if (method == null)
             {
-                return false;
+                yield break;
             }
 
             // find all methods with the same name and parameters cound
             var conflics = parameterSymbol.ContainingType
                 .GetMembers()
                 .OfType<IMethodSymbol>()
-                .Where(m => m.Name == method.Name && method.Parameters.Length == m.Parameters.Length && !m.Parameters[parameterSymbol.Ordinal].Type.IsGenericTypeDefinition());
+                .Where(m => m.Name == method.Name && method.Parameters.Length == m.Parameters.Length && !m.Parameters[parameterSymbol.Ordinal].Type.IsGenericTypeDefinition()).Select(m => m.Parameters[parameterSymbol.Ordinal].Type);
 
-            return conflics.Any();
+            foreach (var conflictingType in conflics)
+            {
+                yield return conflictingType;
+            }
         }
 
         public static bool IsGenericTypeDefinition(this ITypeSymbol typeSymbol)

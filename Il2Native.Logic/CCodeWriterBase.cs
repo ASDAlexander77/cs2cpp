@@ -611,7 +611,7 @@ namespace Il2Native.Logic
 
             foreach (var parameterSymbol in methodSymbol.Parameters)
             {
-                var isConflictingGenericParameter = parameterSymbol.IsConflictingGenericParameter();
+                var conflictingGenericParameterTypes = parameterSymbol.GetConflictingGenericParameterTypes().ToList();
 
                 if (anyParameter)
                 {
@@ -626,7 +626,35 @@ namespace Il2Native.Logic
 
                 anyParameter = true;
 
-                this.WriteType(parameterSymbol.Type, allowKeywords: true, containingNamespace: containingNamespace);
+                if (!conflictingGenericParameterTypes.Any())
+                {
+                    this.WriteType(parameterSymbol.Type, allowKeywords: true, containingNamespace: containingNamespace);
+                }
+                else
+                {
+                    this.TextSpan("typename __enable_if<");
+                    var any = false;
+                    foreach (var conflictType in conflictingGenericParameterTypes)
+                    {
+                        if (any)
+                        {
+                            this.TextSpan(" && ");
+                        }
+
+                        this.TextSpan("!std::is_same<");
+                        this.WriteType(parameterSymbol.Type, allowKeywords: true, containingNamespace: containingNamespace);
+                        this.TextSpan(", ");
+                        this.WriteType(conflictType, allowKeywords: true, containingNamespace: containingNamespace);
+                        this.TextSpan(">::value");
+
+                        any = true;
+                    }
+
+                    this.TextSpan(", ");
+                    this.WriteType(parameterSymbol.Type, allowKeywords: true, containingNamespace: containingNamespace);
+                    this.TextSpan(">::type");
+                }
+
                 if (parameterSymbol.RefKind != RefKind.None)
                 {
                     this.TextSpan("&");
