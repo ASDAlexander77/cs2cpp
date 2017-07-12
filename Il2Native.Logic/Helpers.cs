@@ -1186,6 +1186,11 @@ namespace Il2Native.Logic
                 yield break;
             }
 
+            if (!(parameterSymbol.Type.ContainingSymbol is ITypeSymbol))
+            {
+                yield break;
+            }
+
             if (parameterSymbol.ContainingType == null)
             {
                 // TODO: you can remove it to clean up of ParameterImpl class

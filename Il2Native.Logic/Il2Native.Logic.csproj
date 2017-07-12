@@ -215,7 +215,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="impl\Microsoft\Win32\Win32Native.cpp" />
-    <Content Include="impl\System\Activator.hpp" />
     <Content Include="impl\System\Array.cpp" />
     <Content Include="impl\System\Buffer.cpp" />
     <Content Include="impl\System\DateTime.cpp" />
