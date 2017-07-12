@@ -617,7 +617,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             if (isCoreLib)
             {
-                this.ExtractCoreLibImpl();
+                this.ExtractCoreLibImpl(identity);
             }
 
             if (impl != null && impl.Any())
@@ -638,8 +638,9 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             this.WriteBuildFiles(identity, references, !isLibrary);
         }
 
-        private void ExtractCoreLibImpl()
+        private void ExtractCoreLibImpl(AssemblyIdentity identity)
         {
+            var isCoreLibName = identity.Name == "CoreLib";
             var implFolder = Path.Combine(this.currentFolder, "Impl");
             // extract Impl file
             using (var archive = new ZipArchive(new MemoryStream(Resources.Impl)))
@@ -663,6 +664,12 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     if (!File.Exists(completeFileName))
                     {
                         file.ExtractToFile(completeFileName);
+                       if (!isCoreLibName)
+                        {
+                            // replace CoreLib.h with <Identity.h>
+                            var text = File.ReadAllText(completeFileName).Replace("#include \"CoreLib.h\"", string.Format("#include \"{0}.h\"", identity.Name));
+                            File.WriteAllText(completeFileName, text);
+                        }
                     }
                 }
             }
