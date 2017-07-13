@@ -27,6 +27,7 @@
             this.References = new List<string>();
             this.Errors = new List<string>();
             this.Options = options;
+            this.Dictionaries = new Dictionary<string, List<string>>();
         }
 
         public IList<string> Sources { get; private set; }
@@ -38,6 +39,8 @@
         public IList<string> Errors { get; private set; }
 
         public IDictionary<string, string> Options { get; private set; }
+
+        public IDictionary<string, List<string>> Dictionaries { get; private set; }
 
         public bool Load(string projectFilePath)
         {
@@ -292,20 +295,56 @@
                     case "Content":
                         LoadContent(item);
                         break;
+                    default:
+                        AddValueTo(item);
+                        break;
                 }
             }
         }
 
         private void LoadCompile(XElement element)
         {
-            var fullFileName = PathCombine(this.FillProperties(element.Attribute("Include").Value));
-            Debug.Assert(fullFileName.EndsWith(".cs"));
-            this.Sources.Add(fullFileName);
+            Load(element, this.Sources);
         }
 
         private void LoadContent(XElement element)
         {
-            this.Content.Add(PathCombine(this.FillProperties(element.Attribute("Include").Value)));
+            Load(element, this.Content);
+        }
+
+        private void Load(XElement element, IList<string> destination)
+        {
+            var includeValue = element.Attribute("Include").Value;
+
+            var possibleDictionary = GetDictionary(includeValue);
+            if (possibleDictionary != null)
+            {
+                foreach (var item in possibleDictionary)
+                {
+                    if (item.Contains('@'))
+                    {
+                        throw new InvalidOperationException();
+                    }
+
+                    destination.Add(item);
+                }
+            }
+            else
+            {
+                var fullFileName = PathCombine(this.FillProperties(includeValue));
+                destination.Add(fullFileName);
+            }
+        }
+
+        private void AddValueTo(XElement element)
+        {
+            var path = PathCombine(this.FillProperties(element.Attribute("Include").Value));
+            if (!this.Dictionaries.ContainsKey(element.Name.LocalName))
+            {
+                this.Dictionaries[element.Name.LocalName] = new List<string>();
+            }
+
+            this.Dictionaries[element.Name.LocalName].Add(path);
         }
 
         private void ProcessError(XElement element)
@@ -370,20 +409,26 @@
             return null;
         }
 
-        private string PathCombine(string filePath)
+        private string PathCombine(string possibleFilePath)
         {
-            if (File.Exists(filePath))
+            try
             {
-                return new FileInfo(filePath).FullName;
+                if (File.Exists(possibleFilePath))
+                {
+                    return new FileInfo(possibleFilePath).FullName;
+                }
+
+                var filePathExt = Path.Combine(this.folder, possibleFilePath);
+                if (File.Exists(filePathExt))
+                {
+                    return new FileInfo(filePathExt).FullName;
+                }
+            }
+            catch (Exception)
+            {
             }
 
-            var filePathExt = Path.Combine(this.folder, filePath);
-            if (File.Exists(filePathExt))
-            {
-                return new FileInfo(filePathExt).FullName;
-            }
-
-            return filePath;
+            return possibleFilePath;
         }
 
         private bool ProjectCondition(XElement element)
@@ -481,7 +526,7 @@
         private string FillProperties(string conditionValueParam)
         {
             var processed = new StringBuilder();
-            string conditionValue = conditionValueParam;
+            var conditionValue = conditionValueParam;
 
             var lastIndex = 0;
             var poisition = 0;
@@ -492,10 +537,8 @@
                 {
                     break;
                 }
-                else
-                {
-                    processed.Append(conditionValue.Substring(lastIndex, poisition - lastIndex));
-                }
+
+                processed.Append(conditionValue.Substring(lastIndex, poisition - lastIndex));
 
                 var left = conditionValue.IndexOf('(', poisition);
                 if (left == -1)
@@ -523,6 +566,57 @@
             processed.Append(conditionValue.Substring(lastIndex));
 
             return processed.ToString();
+        }
+
+        private List<string> GetDictionary(string conditionValueParam)
+        {
+            var property = conditionValueParam;
+
+            var lastIndex = 0;
+            var poisition = 0;
+            poisition = property.IndexOf('@', lastIndex);
+            if (poisition == -1)
+            {
+                return null;
+            }
+
+            var left = property.IndexOf('(', poisition);
+            if (left == -1)
+            {
+                return null;
+            }
+
+            property = property.Substring(left + 1);
+
+            var right = FindNextBracket(property, '(', ')');
+            if (right == -1)
+            {
+                return null;
+            }
+
+            var list = new List<string>();
+            var dictionaryName = property.Substring(0, right).Trim();
+            if (this.Dictionaries.ContainsKey(dictionaryName))
+            {
+                var dictionary = this.Dictionaries[dictionaryName];
+                foreach (var item in dictionary)
+                {
+                    var dictionaryItem = GetDictionary(item);
+                    if (dictionaryItem != null)
+                    {
+                        foreach (var subDictionaryItem in dictionaryItem)
+                        {
+                            list.Add(subDictionaryItem);
+                        }
+                    }
+                    else
+                    {
+                        list.Add(item);
+                    }
+                }
+            }
+
+            return list;
         }
 
         private static int FindNextBracket(string value, char leftChar, char rightChar)
