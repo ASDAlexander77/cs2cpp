@@ -10,10 +10,12 @@ namespace Il2Native.Logic.Project
     public class ProjectProperties : IDictionary<string, string>
     {
         readonly IDictionary<string, string> dict;
+        readonly IDictionary<string, string> lowerDict;
 
         public ProjectProperties()
         {
             this.dict = new Dictionary<string, string>();
+            this.lowerDict = new Dictionary<string, string>();
         }
 
         public ProjectProperties(IDictionary<string, string> dict)
@@ -90,15 +92,19 @@ namespace Il2Native.Logic.Project
         {
             get
             {
-                if (!this.ContainsKey(key))
+                var lowerKey = key.ToLowerInvariant();
+                var hasKey = this.dict.ContainsKey(key);
+                var hasLowerKey = this.lowerDict.ContainsKey(lowerKey);
+                if (!hasKey && !hasLowerKey)
                 {
-                    return Environment.GetEnvironmentVariable(key);
+                    var value = Environment.GetEnvironmentVariable(key);
+                    return value;
                 }
 
-                return this.dict[key];
+                return hasKey ? this.dict[key] : hasLowerKey ? this.lowerDict[lowerKey] : null;
             }
 
-            set { this.dict[key] = value; }
+            set { this.dict[key] = value; this.lowerDict[key.ToLowerInvariant()] = value; }
         }
 
         public ICollection<string> Keys 
