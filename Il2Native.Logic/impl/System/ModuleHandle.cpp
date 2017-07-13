@@ -34,11 +34,13 @@ namespace CoreLib {
 			throw 0xC000C000;
 		}
 
+#ifdef CORELIB_ONLY
 		// Method : System.ModuleHandle.GetAssembly(System.Reflection.RuntimeModule, System.Runtime.CompilerServices.ObjectHandleOnStack)
 		void ModuleHandle::GetAssembly(_::Reflection::RuntimeModule* handle, _::Runtime::CompilerServices::ObjectHandleOnStack retAssembly)
 		{
 			throw 0xC000C000;
 		}
+#endif
 
 		// TODO: temporary solution
 		_::RuntimeType rmt;

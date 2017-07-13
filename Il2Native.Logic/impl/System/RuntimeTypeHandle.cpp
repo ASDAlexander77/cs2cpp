@@ -17,11 +17,13 @@ namespace CoreLib {
 			throw 0xC000C000;
 		}
 
+#ifdef CORELIB_ONLY
 		// Method : System.RuntimeTypeHandle.CreateInstance(System.RuntimeType, bool, bool, ref bool, ref System.RuntimeMethodHandleInternal, ref bool)
 		object* RuntimeTypeHandle::CreateInstance_Ref_Ref_Ref(_::RuntimeType* type, bool publicOnly, bool noCheck, bool& canBeCached, _::RuntimeMethodHandleInternal& ctor, bool& bNeedSecurityCheck)
 		{
 			throw 0xC000C000;
 		}
+#endif
 
 		// Method : System.RuntimeTypeHandle.CreateCaInstance(System.RuntimeType, System.IRuntimeMethodInfo)
 		object* RuntimeTypeHandle::CreateCaInstance(_::RuntimeType* type, _::IRuntimeMethodInfo* ctor)
@@ -168,11 +170,13 @@ namespace CoreLib {
 			throw 0xC000C000;
 		}
 
+#ifdef CORELIB_ONLY
 		// Method : System.RuntimeTypeHandle.IsContextful(System.RuntimeType)
 		bool RuntimeTypeHandle::IsContextful(_::RuntimeType* type)
 		{
 			throw 0xC000C000;
 		}
+#endif
 
 		// Method : System.RuntimeTypeHandle.IsInterface(System.RuntimeType)
 		bool RuntimeTypeHandle::IsInterface(_::RuntimeType* type)
@@ -186,6 +190,7 @@ namespace CoreLib {
 			throw 0xC000C000;
 		}
 
+#ifdef CORELIB_ONLY
 		// Method : System.RuntimeTypeHandle.IsSecurityCritical(System.RuntimeTypeHandle)
 		bool RuntimeTypeHandle::IsSecurityCritical(RuntimeTypeHandle typeHandle)
 		{
@@ -209,6 +214,7 @@ namespace CoreLib {
 		{
 			throw 0xC000C000;
 		}
+#endif
 
 		// Method : System.RuntimeTypeHandle.IsValueType(System.RuntimeType)
 		bool RuntimeTypeHandle::IsValueType(_::RuntimeType* type)
@@ -268,11 +274,13 @@ namespace CoreLib {
 			throw 0xC000C000;
 		}
 
+#ifdef CORELIB_ONLY
 		// Method : System.RuntimeTypeHandle.GetTypeByName(string, bool, bool, bool, System.Runtime.CompilerServices.StackCrawlMarkHandle, bool, System.Runtime.CompilerServices.ObjectHandleOnStack)
 		void RuntimeTypeHandle::GetTypeByName(string* name, bool throwOnError, bool ignoreCase, bool reflectionOnly, _::Runtime::CompilerServices::StackCrawlMarkHandle stackMark, bool loadTypeFromPartialName, _::Runtime::CompilerServices::ObjectHandleOnStack type)
 		{
 			throw 0xC000C000;
 		}
+#endif
 
 		// Method : System.RuntimeTypeHandle.GetTypeByNameUsingCARules(string, System.Reflection.RuntimeModule, System.Runtime.CompilerServices.ObjectHandleOnStack)
 		void RuntimeTypeHandle::GetTypeByNameUsingCARules(string* name, _::Reflection::RuntimeModule* scope, _::Runtime::CompilerServices::ObjectHandleOnStack type)

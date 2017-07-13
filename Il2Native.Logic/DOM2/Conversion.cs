@@ -231,7 +231,7 @@
                     {
                         c.TextSpan("&");
                         this.Operand.WriteTo(c);
-                        c.TextSpan("->m_firstChar");
+                        c.TextSpan("->_firstChar");
                         return false;
                     }
 

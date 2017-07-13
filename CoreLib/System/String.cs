@@ -21,9 +21,9 @@ namespace System
         private const int TrimBoth = 2;
 
         private int m_stringLength;
-        private char m_firstChar;
+        private char _firstChar;
 
-        internal char FirstChar { get { return m_firstChar; } }
+        internal char FirstChar { get { return _firstChar; } }
 
         public int Length
         {
@@ -38,7 +38,7 @@ namespace System
         {
             get
             {
-                fixed (char* p = &m_firstChar)
+                fixed (char* p = &_firstChar)
                 {
                     return p[index];
                 }
@@ -147,7 +147,7 @@ namespace System
             char[] chars = new char[length];
             if (length > 0)
             {
-                fixed (char* src = &this.m_firstChar)
+                fixed (char* src = &this._firstChar)
                 fixed (char* dest = chars)
                 {
                     wstrcpy(dest, src, length);
@@ -167,7 +167,7 @@ namespace System
             char[] chars = new char[length];
             if (length > 0)
             {
-                fixed (char* src = &this.m_firstChar)
+                fixed (char* src = &this._firstChar)
                 fixed (char* dest = chars)
                 {
                     wstrcpy(dest, src + startIndex, length);
@@ -369,7 +369,7 @@ namespace System
 
             if (separator == null || separator.Length == 0)
             {
-                fixed (char* pwzChars = &this.m_firstChar)
+                fixed (char* pwzChars = &this._firstChar)
                 {
                     for (int i = 0; i < Length && foundCount < sepList.Length; i++)
                     {
@@ -384,7 +384,7 @@ namespace System
             {
                 int sepListCount = sepList.Length;
                 int sepCount = separator.Length;
-                fixed (char* pwzChars = &this.m_firstChar, pSepChars = separator)
+                fixed (char* pwzChars = &this._firstChar, pSepChars = separator)
                 {
                     for (int i = 0; i < Length && foundCount < sepListCount; i++)
                     {
@@ -409,7 +409,7 @@ namespace System
             int sepListCount = sepList.Length;
             int sepCount = separators.Length;
 
-            fixed (char* pwzChars = &this.m_firstChar)
+            fixed (char* pwzChars = &this._firstChar)
             {
                 for (int i = 0; i < Length && foundCount < sepListCount; i++)
                 {
@@ -485,8 +485,8 @@ namespace System
         {
             String result = FastAllocateString(length);
 
-            fixed (char* dest = &result.m_firstChar)
-            fixed (char* src = &this.m_firstChar)
+            fixed (char* dest = &result._firstChar)
+            fixed (char* src = &this._firstChar)
             {
                 wstrcpy(dest, src + startIndex, length);
             }
@@ -514,7 +514,7 @@ namespace System
         {
             int length = strA.Length;
 
-            fixed (char* ap = &strA.m_firstChar) fixed (char* bp = &strB.m_firstChar)
+            fixed (char* ap = &strA._firstChar) fixed (char* bp = &strB._firstChar)
             {
                 char* a = ap;
                 char* b = bp;
@@ -593,7 +593,7 @@ namespace System
 
         public unsafe static int Compare(string strA, int indexA, string strB, int indexB, int length, StringComparison stringComparison = StringComparison.Ordinal)
         {
-            fixed (char* ap = &strA.m_firstChar) fixed (char* bp = &strB.m_firstChar)
+            fixed (char* ap = &strA._firstChar) fixed (char* bp = &strB._firstChar)
             {
                 char* a = ap;
                 char* b = bp;
@@ -680,8 +680,8 @@ namespace System
             // Set up the loop variables.
             unsafe
             {
-                fixed (char* strACharsFirstChar = &strA.m_firstChar)
-                fixed (char* strBCharsFirstChar = &strB.m_firstChar)
+                fixed (char* strACharsFirstChar = &strA._firstChar)
+                fixed (char* strBCharsFirstChar = &strB._firstChar)
                 {
                     char* strAChars = strACharsFirstChar + indexA;
                     char* strBChars = strBCharsFirstChar + indexB;
@@ -739,9 +739,9 @@ namespace System
             }
 
             // Most common case, first character is different.
-            if ((strA.m_firstChar - strB.m_firstChar) != 0)
+            if ((strA._firstChar - strB._firstChar) != 0)
             {
-                return strA.m_firstChar - strB.m_firstChar;
+                return strA._firstChar - strB._firstChar;
             }
 
             return CompareOrdinalHelper(strA, strB);
@@ -752,7 +752,7 @@ namespace System
             int length = Math.Min(strA.Length, strB.Length);
             int diffOffset = -1;
 
-            fixed (char* ap = &strA.m_firstChar) fixed (char* bp = &strB.m_firstChar)
+            fixed (char* ap = &strA._firstChar) fixed (char* bp = &strB._firstChar)
             {
                 char* a = ap;
                 char* b = bp;
@@ -1185,8 +1185,8 @@ namespace System
 
             unsafe
             {
-                fixed (char* srcFirst = &this.m_firstChar)
-                fixed (char* dstFirst = &s.m_firstChar)
+                fixed (char* srcFirst = &this._firstChar)
+                fixed (char* dstFirst = &s._firstChar)
                 {
                     char* src = srcFirst;
                     char* dst = dstFirst;
@@ -1212,8 +1212,8 @@ namespace System
 
             unsafe
             {
-                fixed (char* srcFirst = &this.m_firstChar)
-                fixed (char* dstFirst = &s.m_firstChar)
+                fixed (char* srcFirst = &this._firstChar)
+                fixed (char* dstFirst = &s._firstChar)
                 {
                     char* src = srcFirst;
                     char* dst = dstFirst;
@@ -1575,7 +1575,7 @@ namespace System
                 return String.Empty;
 
             String s = FastAllocateString(stringLength);
-            fixed (char* pTempChars = &s.m_firstChar)
+            fixed (char* pTempChars = &s._firstChar)
             {
                 int doubleCheck = encoding.GetChars(bytes, byteLength, pTempChars, stringLength, null);
             }

@@ -77,10 +77,6 @@
 #undef HKEY_DYN_DATA
 #undef DEBUG
 #undef UInt32x32To64
-#undef CreateDirectory
-#undef GetCurrentDirectory
-#undef RemoveDirectory
-#undef SetCurrentDirectory
 
 #ifdef GC_ADD_CALLER
 # define GC_ALLOC_PARAMS GC_RETURN_ADDR, _file, _line

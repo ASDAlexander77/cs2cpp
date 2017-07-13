@@ -1079,7 +1079,7 @@ public:
 		}
 
 		auto _new_string = string::FastAllocateString(length);
-		string::wstrcpy(&_new_string->m_firstChar, (char16_t*)str, length);
+		string::wstrcpy(&_new_string->_firstChar, (char16_t*)str, length);
 		__strings[str] = _new_string;
 		return _new_string;
 	}

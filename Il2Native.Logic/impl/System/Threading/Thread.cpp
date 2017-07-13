@@ -37,6 +37,7 @@ namespace CoreLib {
 				throw __new<::CoreLib::System::InvalidOperationException>();
 			}
 
+#ifdef CORELIB_ONLY
 			// Method : System.Threading.Thread.StartInternal(System.Security.Principal.IPrincipal, ref System.Threading.StackCrawlMark)
 			void Thread::StartInternal_Ref(::CoreLib::System::Security::Principal::IPrincipal* principal, ::CoreLib::System::Threading::StackCrawlMark__enum& stackMark)
 			{
@@ -63,6 +64,7 @@ namespace CoreLib {
 				this->DONT_USE_InternalThread._value = t;
 #endif
 			}
+#endif 
 
 			// Method : System.Threading.Thread.InternalGetCurrentThread()
 			::CoreLib::System::IntPtr Thread::InternalGetCurrentThread()
@@ -70,6 +72,7 @@ namespace CoreLib {
 				return __current_thread->DONT_USE_InternalThread;
 			}
 
+#ifdef CORELIB_ONLY
 			// Method : System.Threading.Thread.AbortInternal()
 			void Thread::AbortInternal()
 			{
@@ -131,6 +134,7 @@ namespace CoreLib {
 				return pthread_join(*(pthread_t*)voidPtr, 0) == 0;
 #endif
 			}
+#endif
 
 			// Method : System.Threading.Thread.SleepInternal(int)
 			void Thread::SleepInternal(int32_t millisecondsTimeout)
@@ -160,11 +164,13 @@ namespace CoreLib {
 				return __current_thread;
 			}
 
+#ifdef CORELIB_ONLY
 			// Method : System.Threading.Thread.GetProcessDefaultStackSize()
 			uint64_t Thread::GetProcessDefaultStackSize()
 			{
 				throw 0xC000C000;
 			}
+#endif
 
 			// Method : System.Threading.Thread.SetStart(System.Delegate, int)
 			void Thread::SetStart(::CoreLib::System::Delegate* start, int32_t maxStackSize)
@@ -178,6 +184,7 @@ namespace CoreLib {
 				// This function is intentionally blank.
 			}
 
+#ifdef CORELIB_ONLY
 			// Method : System.Threading.Thread.IsBackgroundNative()
 			bool Thread::IsBackgroundNative()
 			{
@@ -194,6 +201,7 @@ namespace CoreLib {
 			{
 				return 0;
 			}
+#endif
 
 			// Method : System.Threading.Thread.nativeInitCultureAccessors()
 			void Thread::nativeInitCultureAccessors()
@@ -220,6 +228,7 @@ namespace CoreLib {
 			}
 
 			// Method : System.Threading.Thread.MemoryBarrier()
+#ifdef CORELIB_ONLY
 #undef MemoryBarrier
 			void Thread::MemoryBarrier()
 			{
@@ -243,6 +252,7 @@ namespace CoreLib {
 			{
 				throw 0xC000C000;
 			}
+#endif
 		}
 	}
 }

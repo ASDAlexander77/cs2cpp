@@ -387,6 +387,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
         public void WriteHeader(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, IEnumerable<CCodeUnit> units, IEnumerable<string> includeHeaders)
         {
             // write header
+            var isCoreLibName = identity.IsCoreLibAssembly();
             var text = new StringBuilder();
             using (var itw = new IndentedTextWriter(new StringWriter(text)))
             {
@@ -398,6 +399,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 if (isCoreLib)
                 {
                     itw.WriteLine(Resources.c_include);
+                    if (isCoreLibName)
+                    {
+                        itw.WriteLine("#define CORELIB_ONLY");
+                    }
+
                     itw.WriteLine(Resources.intrin_template);
                 }
                 else
@@ -640,7 +646,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
         private void ExtractCoreLibImpl(AssemblyIdentity identity)
         {
-            var isCoreLibName = identity.Name == "CoreLib";
+            var isCoreLibName = identity.IsCoreLibAssembly();
             var implFolder = Path.Combine(this.currentFolder, "Impl");
             // extract Impl file
             using (var archive = new ZipArchive(new MemoryStream(Resources.Impl)))

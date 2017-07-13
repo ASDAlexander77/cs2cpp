@@ -24,6 +24,11 @@ namespace Il2Native.Logic
 
     public static class Helpers
     {
+        public static bool IsCoreLibAssembly(this AssemblyIdentity identity)
+        {
+            return identity.Name == "CoreLib";
+        }
+
         public enum CorElementType : byte
         {
             End = (byte)0,

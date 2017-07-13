@@ -100,6 +100,7 @@ namespace CoreLib {
 			return array->get_Length() * array->__array_element_size();
 		}
 
+#ifdef CORELIB_ONLY
 		// Method : System.Buffer.__Memmove(byte*, byte*, uint)
 		void Buffer::__Memmove(uint8_t* dest, uint8_t* src, uint32_t len)
 		{
@@ -115,5 +116,6 @@ namespace CoreLib {
 
 			std::memcpy(dest, src, len);
 		}
+#endif
 	}
 }
