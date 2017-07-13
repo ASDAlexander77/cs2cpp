@@ -88,7 +88,7 @@
             catch (Exception)
             {
                 // TODO: finish evaluating path such as c:\XXX*\**\*.bbb
-                if (!projectPath.Contains("*"))
+                if (!projectPath.Contains("**"))
                 {
                     throw;
                 }
