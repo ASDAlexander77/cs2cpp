@@ -4,7 +4,7 @@ define walk
 endef
 
 LOCAL_PATH := $(call my-dir)
-SRC_PATH := $(LOCAL_PATH)/../../src $(LOCAL_PATH)/../../Impl
+SRC_PATH := $(LOCAL_PATH)/../../src $(LOCAL_PATH)/../../impl
 
 include $(CLEAR_VARS)
 

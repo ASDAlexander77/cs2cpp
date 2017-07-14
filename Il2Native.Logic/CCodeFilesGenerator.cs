@@ -109,18 +109,18 @@ namespace Il2Native.Logic
 include(PrecompiledHeader.cmake)
 
 file(GLOB <%name%>_H
-    ""./src/<%Name%>.h""
+    ""${PROJECT_SOURCE_DIR}/src/<%Name%>.h""
 )
 
 file(GLOB_RECURSE <%name%>_SRC
-    ""./src/*.cpp""
+    ""${PROJECT_SOURCE_DIR}/src/*.cpp""
 )
 
 file(GLOB_RECURSE <%name%>_IMPL
-    ""./impl/*.cpp""
+    ""${PROJECT_SOURCE_DIR}/impl/*.cpp""
 )
 
-include_directories(""./"" ""./src"" ""./impl"" <%include%>)
+include_directories(""${PROJECT_SOURCE_DIR}/src"" ""${PROJECT_SOURCE_DIR}/impl"" <%include%>)
 
 if (CMAKE_BUILD_TYPE STREQUAL ""Debug"")
     SET(BUILD_TYPE ""debug"")
@@ -131,27 +131,30 @@ endif()
 if (MSVC)
     SET(BUILD_ARCH ""win32"")
 
-    link_directories(""./"" <%links%>)
+    link_directories(<%links%>)
     SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi /EHsc /DDEBUG /wd4250 /wd4200 /wd4291 /wd4996 /wd4800 /MP8 /bigobj"")
     SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} /Ox /EHsc /wd4250 /wd4200 /wd4291 /wd4996 /wd4800 /MP8 /bigobj"")
     set(CMAKE_EXE_LINKER_FLAGS ""${CMAKE_EXE_LINKER_FLAGS} /ignore:4006 /ignore:4049 /ignore:4217"")
 else()
     if (CMAKE_SYSTEM_NAME STREQUAL ""Android"")
-        SET(EXTRA_CXX_FLAGS ""-std=gnu++11 -fexceptions -frtti"")
+        SET(EXTRA_CXX_FLAGS ""-std=c++11 -fexceptions -frtti"")
         SET(BUILD_ARCH ""vs_android"")
-    else()
-        SET(EXTRA_CXX_FLAGS ""-std=gnu++14 -march=native"")
+    elseif (CMAKE_SYSTEM_NAME STREQUAL ""Windows"")
+        SET(EXTRA_CXX_FLAGS ""-std=c++14 -march=native"")
         SET(BUILD_ARCH ""mingw32"")
+    else()
+        SET(EXTRA_CXX_FLAGS ""-std=c++14 -march=native"")
+        SET(BUILD_ARCH ""linux"")
     endif()
 
-    link_directories(""./"" <%links%>)
-    SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -fvar-tracking-assignments -gdwarf-4 -DDEBUG ${EXTRA_CXX_FLAGS} -Wno-invalid-offsetof"")
+    link_directories(<%links%>)
+    SET(CMAKE_CXX_FLAGS_DEBUG ""${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb -DDEBUG ${EXTRA_CXX_FLAGS} -Wno-invalid-offsetof"")
     SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -O2 ${EXTRA_CXX_FLAGS} -Wno-invalid-offsetof"")
 endif()
 
-set_precompiled_header(<%name%> CXX ""${<%name%>_H}"" pchSrcVar)
-add_<%type%> (<%name%> ""${pchSrcVar}"" ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
-use_precompiled_header (<%name%> ""${<%name%>_SRC}"" ""${<%name%>_IMPL}"")
+set_precompiled_header(<%name%> CXX ${<%name%>_H} pchSrcVar)
+add_<%type%> (<%name%> ${pchSrcVar} ${<%name%>_SRC} ${<%name%>_IMPL})
+use_precompiled_header (<%name%> ${<%name%>_SRC} ${<%name%>_IMPL})
 
 <%libraries%>";
 
@@ -173,7 +176,7 @@ endif()";
             }
             else
             {
-                include += " \"./bdwgc/include\"";
+                include += " \"${PROJECT_SOURCE_DIR}/bdwgc/include\"";
             }
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("CMakeLists", ".txt"))))
@@ -203,6 +206,69 @@ mingw32-make -j 8 2>log";
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_mingw32_release", ".bat"))))
             {
                 itw.Write(buildMinGw32.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
+                itw.Close();
+            }
+
+            // build linux clang DEBUG .sh
+            var buildUnix = @"mkdir __build_linux_<%build_type_lowercase%>
+cd __build_linux_<%build_type_lowercase%>
+cmake -f .. -G ""Unix Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+make -j 8 2>log";
+
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_gcc_debug", ".sh"))))
+            {
+                itw.NewLine = "\n";
+                var text = buildUnix.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Debug").Replace("<%build_type_lowercase%>", "debug");
+                foreach (var line in text.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+                {
+                    itw.WriteLine(line);
+                }
+
+                itw.Close();
+            }
+
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_gcc_release", ".sh"))))
+            {
+                itw.NewLine = "\n";
+                var text = buildUnix.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release");
+                foreach (var line in text.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+                {
+                    itw.WriteLine(line);
+                }
+
+                itw.Close();
+            }
+
+            // build linux clang DEBUG .sh
+            var buildUnixClang = @"mkdir __build_linux_<%build_type_lowercase%>
+cd __build_linux_<%build_type_lowercase%>
+export CC=clang
+export CXX=clang++
+cmake -f .. -G ""Unix Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+make -j 8 2>log
+";
+
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_clang_debug", ".sh"))))
+            {
+                itw.NewLine = "\n";
+                var text = buildUnixClang.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Debug").Replace("<%build_type_lowercase%>", "debug");
+                foreach (var line in text.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+                {
+                    itw.WriteLine(line);
+                }
+
+                itw.Close();
+            }
+
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_clang_release", ".sh"))))
+            {
+                itw.NewLine = "\n";
+                var text = buildUnixClang.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release");
+                foreach (var line in text.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+                {
+                    itw.WriteLine(line);
+                }
+
                 itw.Close();
             }
 
@@ -271,7 +337,8 @@ if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops
 md __build_mingw32_<%build_type_lowercase%>_bdwgc 
 cd __build_mingw32_<%build_type_lowercase%>_bdwgc
 cmake -f ../bdwgc -G ""MinGW Makefiles"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_USE_WIN32_THREADS_INIT=ON -Wno-dev
-mingw32-make -j 8 2>log";
+mingw32-make -j 8 2>log
+";
 
                 using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_mingw32_debug", ".bat"))))
                 {
@@ -282,6 +349,70 @@ mingw32-make -j 8 2>log";
                 using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_mingw32_release", ".bat"))))
                 {
                     itw.Write(buildMinGw32Bdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release"));
+                    itw.Close();
+                }
+
+                var buildGccBdwgc = @"if [ ! -d bdwgc ]; then (git clone git://github.com/ivmai/bdwgc.git bdwgc); fi
+if [ ! -d bdwgc/libatomic_ops ]; then (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops); fi
+mkdir __build_linux_<%build_type_lowercase%>_bdwgc 
+cd __build_linux_<%build_type_lowercase%>_bdwgc
+cmake -f ../bdwgc -G ""Unix Makefiles"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_USE_WIN32_THREADS_INIT=OFF -Wno-dev
+make -j 8 2>log";
+
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_gcc_debug", ".sh"))))
+                {
+                    itw.NewLine = "\n";
+                    var text = buildGccBdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Debug").Replace("<%build_type_lowercase%>", "debug");
+                    foreach (var line in text.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+                    {
+                        itw.WriteLine(line);
+                    }
+
+                    itw.Close();
+                }
+
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_gcc_release", ".sh"))))
+                {
+                    itw.NewLine = "\n";
+                    var text = buildGccBdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release");
+                    foreach (var line in text.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+                    {
+                        itw.WriteLine(line);
+                    }
+
+                    itw.Close();
+                }
+
+                var buildClangBdwgc = @"if [ ! -d bdwgc ]; then (git clone git://github.com/ivmai/bdwgc.git bdwgc); fi
+if [ ! -d bdwgc/libatomic_ops ]; then (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops); fi
+mkdir __build_linux_<%build_type_lowercase%>_bdwgc 
+cd __build_linux_<%build_type_lowercase%>_bdwgc
+export CC=clang
+export CXX=clang++
+cmake -f ../bdwgc -G ""Unix Makefiles"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_USE_WIN32_THREADS_INIT=OFF -Wno-dev
+make -j 8 2>log";
+
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_clang_debug", ".sh"))))
+                {
+                    itw.NewLine = "\n";
+                    var text = buildClangBdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Debug").Replace("<%build_type_lowercase%>", "debug");
+                    foreach (var line in text.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+                    {
+                        itw.WriteLine(line);
+                    }
+
+                    itw.Close();
+                }
+
+                using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_clang_release", ".sh"))))
+                {
+                    itw.NewLine = "\n";
+                    var text = buildClangBdwgc.Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore()).Replace("<%build_type%>", "Release").Replace("<%build_type_lowercase%>", "release");
+                    foreach (var line in text.Split(new[] { Environment.NewLine }, StringSplitOptions.None))
+                    {
+                        itw.WriteLine(line);
+                    }
+
                     itw.Close();
                 }
 
@@ -371,7 +502,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             }
 
             var newText = text.ToString();
-            var path = this.GetPath(identity.Name, subFolder: "Impl", ext: ".cpp");
+            var path = this.GetPath(identity.Name, subFolder: "impl", ext: ".cpp");
 
             if (IsNothingChanged(path, newText))
             {
@@ -647,7 +778,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
         private void ExtractCoreLibImpl(AssemblyIdentity identity)
         {
             var isCoreLibName = identity.IsCoreLibAssembly();
-            var implFolder = Path.Combine(this.currentFolder, "Impl");
+            var implFolder = Path.Combine(this.currentFolder, "impl");
             // extract Impl file
             using (var archive = new ZipArchive(new MemoryStream(Resources.Impl)))
             {
@@ -683,7 +814,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
         private void PopulateImpl(string[] impl)
         {
-            var delimeterFolder = "\\Impl\\";
+            var delimeterFolder = "\\impl\\";
             foreach (var file in impl)
             {
                 var completeFileName = string.Concat(this.currentFolder, file.Substring(file.IndexOf(delimeterFolder, StringComparison.OrdinalIgnoreCase)));
