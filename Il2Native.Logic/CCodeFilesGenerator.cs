@@ -780,7 +780,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             var isCoreLibName = identity.IsCoreLibAssembly();
             var implFolder = Path.Combine(this.currentFolder, "impl");
             // extract Impl file
-            using (var archive = new ZipArchive(new MemoryStream(Resources.Impl)))
+            using (var archive = new ZipArchive(new MemoryStream(isCoreLibName ? Resources.CoreLibImpl : Resources.System_Private_CoreLibImpl)))
             {
                 foreach (var file in archive.Entries)
                 {

@@ -136,8 +136,11 @@
   <data name="decimals" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\decimals.cpp;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;iso-8859-1</value>
   </data>
-  <data name="Impl" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Impl.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="CoreLibImpl" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\CoreLibImpl.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="System_Private_CoreLibImpl" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\System_Private_CoreLibImpl.zip;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="intrin_template" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\intrin_template.h;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;iso-8859-1</value>

@@ -133,20 +133,21 @@ namespace Il2Native.Logic.Properties {
         ///};
         ///
         ///// map valuetype to class
-        ///template&lt;typename T&gt; 
+        ///template&lt;typename T&gt;
         ///struct valuetype_to_class { typedef T type; };
         ///
         ///// map class to valuetype
-        ///template&lt;typename T&gt; 
+        ///template&lt;typename T&gt;
         ///struct class_to_valuetype { typedef T type; };
         ///
-        ///template&lt;typename T&gt; 
+        ///template&lt;typename T&gt;
         ///struct gc_traits { constexpr static const GCNormal value = GCNormal::Default; };
         ///
+        ///template&lt;typename T&gt;
+        ///struct type_holder { typedef T type; };
+        ///
         ///template &lt;typename T&gt; struct convert_primitive_type_to_class
-        ///{
-        ///	typedef
-        ///		typename std::conditional&lt; std::is_same&lt; T, void [rest of string was truncated]&quot;;.
+        ///{ [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_forward_declarations {
             get {
@@ -200,7 +201,7 @@ namespace Il2Native.Logic.Properties {
         ///	return (T&amp;)*(T*)((void*)tr.Value);
         ///}
         ///
-        ///template &lt;typename T&gt; in [rest of string was truncated]&quot;;.
+        ///inline ::Cor [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_template_definitions {
             get {
@@ -209,23 +210,15 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to # Function for setting up precompiled headers. Usage:
+        ///   Looks up a localized string similar to # Copyright (C) 2012 Yuchen Deng
+        ///# Contact: loaden@gmail.com
         ///#
-        ///#   add_library/executable(target
-        ///#       pchheader.c pchheader.cpp pchheader.h)
-        ///#
-        ///#   add_precompiled_header(target pchheader.h
-        ///#       [FORCEINCLUDE]
-        ///#       [SOURCE_C pchheader.c]
-        ///#       [SOURCE_CXX pchheader.cpp])
-        ///#
-        ///# Options:
-        ///#
-        ///#   FORCEINCLUDE: Add compiler flags to automatically include the
-        ///#   pchheader.h from every source file. Works with both GCC and
-        ///#   MSVC. This is recommended.
-        ///#
-        ///#   SOURCE_C/CXX: Specifies the .c/.cpp sou [rest of string was truncated]&quot;;.
+        ///# Permission is hereby granted, free of charge, to any person obtaining a copy
+        ///# of this software and associated documentation files (the &quot;Software&quot;), to deal
+        ///# in the Software without restriction, including without limitation the rights
+        ///# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        ///# copies of the Software, and to permit persons to whom the Software is
+        ///# furnished to do so, subject to the following conditio [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string cmake_precompiled_header {
             get {
@@ -234,35 +227,32 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CoreLibImpl {
+            get {
+                object obj = ResourceManager.GetObject("CoreLibImpl", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] System_Private_CoreLibImpl
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("System_Private_CoreLibImpl", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to // Decimals
         ///extern &quot;C&quot; double pow(double value, double power);
         ///extern &quot;C&quot; double fabs(double value);
-        ///
-        ///typedef union {
-        ///	uint64_t int64;
-        ///	struct {
-        ///#if BIGENDIAN
-        ///		uint32_t Hi;
-        ///		uint32_t Lo;
-        ///#else            
-        ///		uint32_t Lo;
-        ///		uint32_t Hi;
-        ///#endif           
-        ///	} u;
-        ///} SPLIT64__;
-        ///
-        ///typedef union{
-        ///	struct {
-        ///#if BIGENDIAN
-        ///		uint32_t sign : 1;
-        ///		uint32_t exp : 11;
-        ///		uint32_t mantHi : 20;
-        ///		uint32_t mantLo;
-        ///#else // BIGENDIAN
-        ///		uint32_t mantLo;
-        ///		uint32_t mantHi : 20;
-        ///		uint32_t exp : 11;
-        ///		 [rest of string was truncated]&quot;;.
+        ///.
         /// </summary>
         internal static string decimals {
             get {
@@ -271,26 +261,16 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] Impl {
-            get {
-                object obj = ResourceManager.GetObject("Impl", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to #ifdef _MSC_VER
         ///
         ///::CoreLib::System::IntPtr _interlocked_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value)
         ///{
-        ///	return __init&lt;::CoreLib::System::IntPtr&gt;(InterlockedExchangePointer((void* volatile*)&amp;location1-&gt;m_value, value.m_value));
+        ///	return __init&lt;::CoreLib::System::IntPtr&gt;(InterlockedExchangePointer((void* volatile*)&amp;location1-&gt;_value, value._value));
         ///}
         ///
         ///::CoreLib::System::IntPtr _interlocked_compare_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value, ::CoreLib::System::IntPtr comparand)
         ///{
-        ///	return __init&lt;::CoreLib::System::IntPtr&gt;(InterlockedCompareExchangePoin [rest of string was truncated]&quot;;.
+        ///	return __init&lt;::CoreLib::System::IntPtr&gt;(InterlockedCom [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string intrin {
             get {
@@ -307,7 +287,7 @@ namespace Il2Native.Logic.Properties {
         ///extern ::CoreLib::System::IntPtr _interlocked_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value);
         ///extern ::CoreLib::System::IntPtr _interlocked_compare_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value, ::CoreLib::System::IntPtr comparand);
         ///
-        ///extern ::CoreLib::System::UIntPtr _interlocked_exchange(::CoreLib::System::UIntPtr volatile* location1, ::CoreLib::System::UIntPtr [rest of string was truncated]&quot;;.
+        ///extern ::CoreLib::System::UIntPtr _interlocked_exchange(::CoreLib::System::UIntPtr volatile* location1, ::Core [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string intrin_template {
             get {
@@ -334,7 +314,7 @@ namespace Il2Native.Logic.Properties {
         ///}
         ///
         ///template &lt; typename D, typename S &gt;
-        ///i [rest of string was truncated]&quot;;.
+        /// [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string overflow {
             get {
