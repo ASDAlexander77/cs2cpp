@@ -152,18 +152,11 @@ else()
     SET(CMAKE_CXX_FLAGS_RELEASE ""${CMAKE_CXX_FLAGS_RELEASE} -O2 ${EXTRA_CXX_FLAGS} -Wno-invalid-offsetof"")
 endif()
 
-set_precompiled_header(<%name%> CXX ${<%name%>_H} pchSrcVar)
-add_<%type%> (<%name%> ${pchSrcVar} ${<%name%>_SRC} ${<%name%>_IMPL})
-use_precompiled_header (<%name%> ${<%name%>_SRC} ${<%name%>_IMPL})
+set_precompiled_header(<%name%><%Shared%> CXX ${<%name%>_H} pchSrcVar)
+add_<%type%> (<%name%><%Shared%> <%SHARED%> ${pchSrcVar} ${<%name%>_SRC} ${<%name%>_IMPL})
+use_precompiled_header (<%name%><%Shared%> ${<%name%>_SRC} ${<%name%>_IMPL})
 
-if (""<%type%>"" STREQUAL ""library"")
-    set_precompiled_header(<%name%>Shared CXX ${<%name%>_H} pchSrcVar)
-    add_<%type%> (<%name%>Shared SHARED ${pchSrcVar} ${<%name%>_SRC} ${<%name%>_IMPL})
-    use_precompiled_header (<%name%>Shared ${<%name%>_SRC} ${<%name%>_IMPL})
-endif()
-
-<%libraries%>
-<%librariesDll%>";
+<%libraries%>";
 
             var targetLinkLibraries = @"
 if (MSVC)
@@ -174,14 +167,15 @@ endif()";
 
             var targetLinkLibrariesDll = @"
 if (MSVC)
-target_link_libraries (<%name%>Shared {0} ""gcmt-dll"")
+target_link_libraries (<%name%><%Shared%> {0} ""gcmt-dll"")
 else()
-target_link_libraries (<%name%>Shared {0} ""stdc++"" ""gcmt-dll"")
+target_link_libraries (<%name%><%Shared%> {0} ""stdc++"" ""gcmt-dll"")
 endif()";
 
             var type = executable ? "executable" : "library";
             var include = string.Join(" ", references.Select(a => string.Format("\"{1}/../{0}/src\" \"{1}/../{0}/impl\"", a.Name.CleanUpNameAllUnderscore(), "${PROJECT_SOURCE_DIR}")));
-            var links = string.Join(" ", references.Select(a => string.Format("\"{3}/../{0}/__build_{1}_{2}\" \"{3}/../{0}/__build_{1}_{2}_bdwgc\"", a.Name.CleanUpNameAllUnderscore(), "${BUILD_ARCH}", "${BUILD_TYPE}", "${PROJECT_SOURCE_DIR}")));
+            var linkCoreLib = coreLibIdentity != null ? string.Format("\"{3}/../{0}/__build_{1}_{2}_bdwgc\"", coreLibIdentity.Name.CleanUpNameAllUnderscore(), "${BUILD_ARCH}", "${BUILD_TYPE}", "${PROJECT_SOURCE_DIR}") : string.Empty;
+            var links = string.Join(" ", references.Select(a => string.Format("\"{3}/../{0}/__build_{1}_{2}\"", a.Name.CleanUpNameAllUnderscore(), "${BUILD_ARCH}", "${BUILD_TYPE}", "${PROJECT_SOURCE_DIR}"))) + " " + linkCoreLib;
             var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
             var librariesDll = string.Format(targetLinkLibrariesDll, string.Join(" ", references.Select(a => string.Format("\"{0}Dll\"", a.Name.CleanUpNameAllUnderscore()))));
 
@@ -198,7 +192,22 @@ endif()";
             {
                 itw.Write(
                     cmake.Replace("<%libraries%>", executable ? libraries : string.Empty)
-                         .Replace("<%librariesDll%>", executable ? librariesDll : string.Empty)
+                         .Replace("<%SHARED%>", string.Empty)
+                         .Replace("<%Shared%>", string.Empty)
+                         .Replace("<%type%>", type)
+                         .Replace("<%Name%>", identity.Name)
+                         .Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore())
+                         .Replace("<%include%>", include)
+                         .Replace("<%links%>", links));
+                itw.Close();
+            }
+
+            using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("CMakeLists_Dll", ".txt"))))
+            {
+                itw.Write(
+                    cmake.Replace("<%libraries%>", executable ? librariesDll : string.Empty)
+                         .Replace("<%SHARED%>", executable ? string.Empty : "SHARED")
+                         .Replace("<%Shared%>", executable ? string.Empty : "Shared")
                          .Replace("<%type%>", type)
                          .Replace("<%Name%>", identity.Name)
                          .Replace("<%name%>", identity.Name.CleanUpNameAllUnderscore())

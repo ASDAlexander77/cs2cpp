@@ -8,11 +8,13 @@ namespace CoreLib { namespace System { namespace Runtime { namespace CompilerSer
         throw 3221274624U;
     }
     
+#if CORECLR_DEBUG
     // Method : System.Runtime.CompilerServices.JitHelpers.IsAddressInStack(System.IntPtr)
     bool JitHelpers::IsAddressInStack(::CoreLib::System::IntPtr ptr)
     {
         throw 3221274624U;
     }
+#endif
 
 }}}}
 
