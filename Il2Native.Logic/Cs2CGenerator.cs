@@ -86,6 +86,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public AssemblyIdentity CoreLibIdentity { get; set; }
+
+        /// <summary>
+        /// </summary>
         public string DefaultDllLocations { get; private set; }
 
         public IDictionary<string, string> Options { get; private set; }
@@ -201,7 +205,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, string resolvedFilePath)
+        private AssemblyIdentity AddAsseblyReference(List<MetadataImageReference> assemblies, HashSet<AssemblyIdentity> added, string resolvedFilePath)
         {
             var metadata = AssemblyMetadata.CreateFromStream(new FileStream(resolvedFilePath, FileMode.Open, FileAccess.Read));
 
@@ -217,6 +221,8 @@ namespace Il2Native.Logic
                     this.AddAsseblyReference(assemblies, added, refAssemblyIdentity);
                 }
             }
+
+            return metadata.GetAssembly().Identity;
         }
 
         private AssemblyMetadata CompileWithRoslynInMemory(string[] source)
@@ -459,7 +465,7 @@ namespace Il2Native.Logic
 
             if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
             {
-                this.AddAsseblyReference(assemblies, added, this.CoreLibPath);
+                this.CoreLibIdentity = this.AddAsseblyReference(assemblies, added, this.CoreLibPath);
             }
 
             return added;

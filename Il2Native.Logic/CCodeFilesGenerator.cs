@@ -95,7 +95,7 @@ namespace Il2Native.Logic
             c.EndBlock();
         }
 
-        public void WriteBuildFiles(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool executable)
+        public void WriteBuildFiles(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool executable, AssemblyIdentity coreLibIdentity)
         {
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("PrecompiledHeader", ".cmake"))))
             {
@@ -166,13 +166,13 @@ target_link_libraries (<%name%> {0} ""stdc++"" ""gcmt-lib"")
 endif()";
 
             var type = executable ? "executable" : "library";
-            var include = string.Join(" ", references.Select(a => string.Format("\"../{0}/src\" \"../{0}/impl\"", a.Name.CleanUpNameAllUnderscore())));
-            var links = string.Join(" ", references.Select(a => string.Format("\"../{0}/__build_{1}_{2}\" \"../{0}/__build_{1}_{2}_bdwgc\"", a.Name.CleanUpNameAllUnderscore(), "${BUILD_ARCH}", "${BUILD_TYPE}")));
+            var include = string.Join(" ", references.Select(a => string.Format("\"{1}/../{0}/src\" \"{1}/../{0}/impl\"", a.Name.CleanUpNameAllUnderscore(), "${PROJECT_SOURCE_DIR}")));
+            var links = string.Join(" ", references.Select(a => string.Format("\"{3}/../{0}/__build_{1}_{2}\" \"{3}/../{0}/__build_{1}_{2}_bdwgc\"", a.Name.CleanUpNameAllUnderscore(), "${BUILD_ARCH}", "${BUILD_TYPE}", "${PROJECT_SOURCE_DIR}")));
             var libraries = string.Format(targetLinkLibraries, string.Join(" ", references.Select(a => string.Format("\"{0}\"", a.Name.CleanUpNameAllUnderscore()))));
 
             if (references.Any())
             {
-                include += " \"../CoreLib/bdwgc/include\"";
+                include += " \"${PROJECT_SOURCE_DIR}/../" + coreLibIdentity.Name + "/bdwgc/include\"";
             }
             else
             {
@@ -744,9 +744,9 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             return headersToInclude;
         }
 
-        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, bool isLibrary, IEnumerable<IEnumerable<CCodeUnit>> units, string outputFolder, string[] impl)
+        public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, bool isLibrary, IEnumerable<IEnumerable<CCodeUnit>> units, string outputFolder, string[] impl, AssemblyIdentity coreLibIdentity)
         {
-            this.currentFolder = Path.Combine(outputFolder, identity.Name);
+            this.currentFolder = Path.Combine(outputFolder, identity.Name.CleanUpNameAllUnderscore());
             if (!Directory.Exists(this.currentFolder))
             {
                 Directory.CreateDirectory(this.currentFolder);
@@ -772,7 +772,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
             this.WriteSources(identity, units);
 
-            this.WriteBuildFiles(identity, references, !isLibrary);
+            this.WriteBuildFiles(identity, references, !isLibrary, coreLibIdentity);
         }
 
         private void ExtractCoreLibImpl(AssemblyIdentity identity)
