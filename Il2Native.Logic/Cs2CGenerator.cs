@@ -59,14 +59,17 @@ namespace Il2Native.Logic
                 DebugOutput = false;
             }
 
+            // loading corelib if provided
+            var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
+            this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
+
+            // loading project or files
             if (this.FirstSource.EndsWith(".csproj"))
             {
                 this.LoadProject(this.FirstSource);
             }
             else
             {
-                var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
-                this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
                 this.DefaultDllLocations = Path.GetDirectoryName(Path.GetFullPath(this.FirstSource));
                 this.References = args != null ? args.Where(a => a.StartsWith("ref:")).Select(a => a.Substring("ref:".Length)).ToArray() : null;
             }
