@@ -560,6 +560,12 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                         itw.WriteLine("#define CORELIB_ONLY");
                     }
 
+                    // Writing last non static field name for string type
+                    var stringType = units.First(u => u.Type != null && u.Type.ContainingNamespace != null && u.Type.Name == "String" && u.Type.ContainingNamespace.Name == "System").Type;
+                    var lastNonStaticStringMember = stringType.GetMembers().OfType<IFieldSymbol>().Last(f => !f.IsStatic);
+                    itw.Write("#define FIRST_CHAR_FIELD ");
+                    itw.WriteLine(lastNonStaticStringMember.Name.CleanUpNameAllUnderscore());
+
                     itw.WriteLine(Resources.intrin_template);
                 }
                 else

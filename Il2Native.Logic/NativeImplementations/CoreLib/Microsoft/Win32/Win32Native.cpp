@@ -59,7 +59,7 @@ namespace CoreLib {
 				auto hEvent = CreateEventW((LPSECURITY_ATTRIBUTES)lpSecurityAttributes,
 					(BOOL)isManualReset,
 					(BOOL)initialState,
-					(LPCWSTR)(name != nullptr ? &name->_firstChar : nullptr));
+					(LPCWSTR)(name != nullptr ? &name->FIRST_CHAR_FIELD : nullptr));
 
 				if (hEvent == (HANDLE)-1)
 				{
@@ -114,7 +114,7 @@ namespace CoreLib {
 			::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle* Win32Native::CreateFile(string* lpFileName, int32_t dwDesiredAccess, ::CoreLib::System::IO::FileShare__enum dwShareMode, ::CoreLib::Microsoft::Win32::Win32Native_SECURITY_ATTRIBUTES* securityAttrs, ::CoreLib::System::IO::FileMode__enum dwCreationDisposition, int32_t dwFlagsAndAttributes, ::CoreLib::System::IntPtr hTemplateFile)
 			{
 #ifndef GC_PTHREADS
-				auto hFile = CreateFileW((LPCWSTR)&lpFileName->_firstChar,    // name of the write
+				auto hFile = CreateFileW((LPCWSTR)&lpFileName->FIRST_CHAR_FIELD,    // name of the write
 					(int32_t)dwDesiredAccess,						 // open for writing
 					(int32_t)dwShareMode,							 // do not share
 					(LPSECURITY_ATTRIBUTES)securityAttrs,			 // default security
@@ -139,7 +139,7 @@ namespace CoreLib {
 					return __new<::CoreLib::Microsoft::Win32::SafeHandles::SafeFileHandle>(((::CoreLib::System::IntPtr)::CoreLib::Microsoft::Win32::Win32Native::INVALID_HANDLE_VALUE), false);
 				}
 
-				auto path = &lpFileName->_firstChar;
+				auto path = &lpFileName->FIRST_CHAR_FIELD;
 				auto path_length = string::wcslen(path);
 				auto utf8Enc = ::CoreLib::System::Text::Encoding::get_UTF8();
 				auto byteCount = utf8Enc->GetByteCount(path, path_length);
@@ -405,9 +405,9 @@ namespace CoreLib {
 			bool Win32Native::GetFileAttributesEx_Ref(string* name, int32_t fileInfoLevel, ::CoreLib::Microsoft::Win32::Win32Native_WIN32_FILE_ATTRIBUTE_DATA& lpFileInformation)
 			{
 #ifndef GC_PTHREADS
-				return ::GetFileAttributesExW((LPCWSTR)&name->_firstChar, (GET_FILEEX_INFO_LEVELS)fileInfoLevel, &lpFileInformation);
+				return ::GetFileAttributesExW((LPCWSTR)&name->FIRST_CHAR_FIELD, (GET_FILEEX_INFO_LEVELS)fileInfoLevel, &lpFileInformation);
 #else
-				auto filename = &name->_firstChar;
+				auto filename = &name->FIRST_CHAR_FIELD;
 				auto filename_length = string::wcslen(filename);
 				auto utf8Enc = ::CoreLib::System::Text::Encoding::get_UTF8();
 				auto byteCount = utf8Enc->GetByteCount(filename, filename_length);
@@ -448,9 +448,9 @@ namespace CoreLib {
 			bool Win32Native::SetCurrentDirectory(string* path)
 			{
 #ifndef GC_PTHREADS
-				return ::SetCurrentDirectoryW((LPCWSTR)&path->_firstChar) > 0;
+				return ::SetCurrentDirectoryW((LPCWSTR)&path->FIRST_CHAR_FIELD) > 0;
 #else
-				auto path_ptr = &path->_firstChar;
+				auto path_ptr = &path->FIRST_CHAR_FIELD;
 				auto path_length = string::wcslen(path_ptr);
 				auto utf8Enc = ::CoreLib::System::Text::Encoding::get_UTF8();
 				auto byteCount = utf8Enc->GetByteCount(path_ptr, path_length);
