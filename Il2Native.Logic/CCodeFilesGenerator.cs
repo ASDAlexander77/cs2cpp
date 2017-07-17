@@ -566,6 +566,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     itw.Write("#define FIRST_CHAR_FIELD ");
                     itw.WriteLine(lastNonStaticStringMember.Name.CleanUpNameAllUnderscore());
 
+                    var intPtrType = units.First(u => u.Type != null && u.Type.ContainingNamespace != null && u.Type.Name == "IntPtr" && u.Type.ContainingNamespace.Name == "System").Type;
+                    var firstNonStaticIntPtrMember = intPtrType.GetMembers().OfType<IFieldSymbol>().First(f => !f.IsStatic);
+                    itw.Write("#define INTPTR_VALUE_FIELD ");
+                    itw.WriteLine(firstNonStaticIntPtrMember.Name.CleanUpNameAllUnderscore());
+
                     itw.WriteLine(Resources.intrin_template);
                 }
                 else

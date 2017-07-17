@@ -23,7 +23,7 @@ namespace Il2Native.Logic.DOM.Synthesized
                             new FieldAccess
                             {
                                 ReceiverOpt = new ThisReference { Type = type },
-                                Field = new FieldImpl { Name = type.IsIntPtrType() ? "_value" : "m_value" }
+                                Field = new FieldImpl { Name = type.IsIntPtrType() ? "INTPTR_VALUE_FIELD" : "m_value" }
                             }
                     }
                 }

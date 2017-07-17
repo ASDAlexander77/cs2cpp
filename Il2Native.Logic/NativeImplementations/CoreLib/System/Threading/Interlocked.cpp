@@ -81,10 +81,10 @@ namespace CoreLib {
 			::CoreLib::System::IntPtr Interlocked::Exchange_Ref(::CoreLib::System::IntPtr& location1, ::CoreLib::System::IntPtr value)
 			{
 #ifdef _MSC_VER
-				return __init<::CoreLib::System::IntPtr>(InterlockedExchangePointer((void* volatile*)&location1->_value, value->_value));
+				return __init<::CoreLib::System::IntPtr>(InterlockedExchangePointer((void* volatile*)&location1->INTPTR_VALUE_FIELD, value->INTPTR_VALUE_FIELD));
 #else
 				__sync_synchronize();
-				return __init<::CoreLib::System::IntPtr>(__sync_lock_test_and_set((void* volatile*)&location1->_value, value->_value));
+				return __init<::CoreLib::System::IntPtr>(__sync_lock_test_and_set((void* volatile*)&location1->INTPTR_VALUE_FIELD, value->INTPTR_VALUE_FIELD));
 #endif
 			}
 
@@ -122,9 +122,9 @@ namespace CoreLib {
 			::CoreLib::System::IntPtr Interlocked::CompareExchange_Ref(::CoreLib::System::IntPtr& location1, ::CoreLib::System::IntPtr value, ::CoreLib::System::IntPtr comparand)
 			{
 #ifdef _MSC_VER
-				return __init<::CoreLib::System::IntPtr>(InterlockedCompareExchangePointer((void* volatile*)&location1->_value, value->_value, comparand->_value));
+				return __init<::CoreLib::System::IntPtr>(InterlockedCompareExchangePointer((void* volatile*)&location1->INTPTR_VALUE_FIELD, value->INTPTR_VALUE_FIELD, comparand->INTPTR_VALUE_FIELD));
 #else
-				return __init<::CoreLib::System::IntPtr>(__sync_val_compare_and_swap((void* volatile*)&location1->_value, comparand->_value, value->_value));
+				return __init<::CoreLib::System::IntPtr>(__sync_val_compare_and_swap((void* volatile*)&location1->INTPTR_VALUE_FIELD, comparand->INTPTR_VALUE_FIELD, value->INTPTR_VALUE_FIELD));
 #endif
 			}
 
