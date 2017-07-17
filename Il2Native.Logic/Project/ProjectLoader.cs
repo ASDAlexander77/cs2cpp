@@ -457,12 +457,6 @@
         {
             var start = 0;
 
-            if (condition.StartsWith("!"))
-            {
-                var right = condition.Substring(1, condition.Length - 1).Trim();
-                return !ExecuteConditionBool(right);
-            }
-
             if (condition.StartsWith("("))
             {
                 var right = FindNextBracket(condition.Substring(1), '(', ')');
@@ -508,6 +502,12 @@
                 var left = condition.Substring(0, notEqualOperator).Trim();
                 var right = condition.Substring(notEqualOperator + "!=".Length).Trim();
                 return !left.Equals(right);
+            }
+
+            if (condition.StartsWith("!"))
+            {
+                var right = condition.Substring(1, condition.Length - 1).Trim();
+                return !ExecuteConditionBool(right);
             }
 
             if (condition.Trim() == "true")
