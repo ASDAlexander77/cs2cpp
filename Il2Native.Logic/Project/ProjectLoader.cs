@@ -50,7 +50,11 @@
                 var fileInfo = new FileInfo(projectFilePath);
                 var folder = fileInfo.Directory.FullName;
                 Directory.SetCurrentDirectory(folder);
-                BuildWellKnownValues();
+                if (!BuildWellKnownValues())
+                {
+                    return false;
+                }
+
                 BuildWellKnownValues("Project", fileInfo.FullName);
                 return this.LoadProjectInternal(fileInfo.FullName);
             }
@@ -125,7 +129,7 @@
             return true;
         }
 
-        private void BuildWellKnownValues()
+        private bool BuildWellKnownValues()
         {
             var disk = "C:";
             var version = "14.0";
@@ -141,7 +145,7 @@
             try
             {
                 var key = Registry.LocalMachine.OpenSubKey(msbuildRegistryPath);
-                Version registryVersion = new Version("0.0");
+                Version registryVersion = new Version("14.0");
                 foreach (var keyVersionStr in key.GetSubKeyNames())
                 {
                     Version versionKey;
@@ -176,6 +180,15 @@
             catch (Exception)
             {
             }
+
+            if (!Directory.Exists(this.Options["MSBuildToolsPath"]))
+            {
+                var msg = "Install MSBuild from https://www.visualstudio.com/thank-you-downloading-visual-studio/?sku=BuildTools&rel=15";
+                this.Errors.Add(msg);
+                return false;
+            }
+
+            return true;
         }
 
         private void BuildWellKnownValues(string name, string filePath)
