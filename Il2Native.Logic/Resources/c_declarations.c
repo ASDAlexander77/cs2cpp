@@ -1210,7 +1210,7 @@ inline string* __ascii_to_string(char* str)
 
 inline string* __wchar_t_to_string(char16_t* str)
 {
-	return string::CtorCharPtr(str);
+	return ((string*)nullptr)->CtorCharPtr(str);
 }
 
 // support functions

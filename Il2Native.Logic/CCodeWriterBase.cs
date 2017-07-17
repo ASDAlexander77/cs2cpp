@@ -751,7 +751,7 @@ namespace Il2Native.Logic
             {
                 if (!methodSymbol.IsExternDeclaration())
                 {
-                    if (methodSymbol.IsStaticMethod())
+                    if (methodSymbol.IsStatic)
                     {
                         this.TextSpan("static");
                         this.WhiteSpace();

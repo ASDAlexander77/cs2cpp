@@ -128,19 +128,19 @@ namespace Il2Native.Logic.DOM2
                     switch (asStr)
                     {
                         case "string.String(char[])":
-                            c.TextSpan("string::CtorCharArray");
+                            c.TextSpan("((string*)nullptr)->CtorCharArray");
                             return false;
                         case "string.String(char, int)":
-                            c.TextSpan("string::CtorCharCount");
+                            c.TextSpan("((string*)nullptr)->CtorCharCount");
                             return false;
                         case "string.String(char*)":
-                            c.TextSpan("string::CtorCharPtr");
+                            c.TextSpan("((string*)nullptr)->CtorCharPtr");
                             return false;
                         case "string.String(char*, int, int)":
-                            c.TextSpan("string::CtorCharPtrStartLength");
+                            c.TextSpan("((string*)nullptr)->CtorCharPtrStartLength");
                             return false;
                         case "string.String(char[], int, int)":
-                            c.TextSpan("string::CtorCharArrayStartLength");
+                            c.TextSpan("((string*)nullptr)->CtorCharArrayStartLength");
                             return false;
                     }
                 }

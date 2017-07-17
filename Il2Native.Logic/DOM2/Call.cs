@@ -212,7 +212,7 @@ namespace Il2Native.Logic.DOM2
                 c.TextSpan(")");
             }
 
-            if (this.Method.IsStaticMethod())
+            if (this.Method.IsStatic)
             {
                 if (!this.Method.IsExternDeclaration())
                 {
