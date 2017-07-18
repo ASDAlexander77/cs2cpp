@@ -233,7 +233,7 @@ namespace Il2Native.Logic
             var srcFileName = Path.GetFileNameWithoutExtension(this.FirstSource);
             var assemblyName = srcFileName;
 
-            var defineSeparators = new[] { ';', ' ' };
+            var defineSeparators = new[] { ';', ',', ' ' };
             var syntaxTrees =
                 source.Select(
                     s =>
