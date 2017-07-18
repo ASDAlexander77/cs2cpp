@@ -14,6 +14,8 @@
     public class ProjectLoader
     {
         private const string msbuildRegistryPath = @"SOFTWARE\Microsoft\MSBuild";
+        private const string visualStudio2017RegistryPath = @"SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7";
+        private const string netframeworkRegistryPath = @"SOFTWARE\Microsoft\.NETFramework";
 
         private static XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
 
@@ -149,7 +151,7 @@
                 foreach (var keyVersionStr in key.GetSubKeyNames())
                 {
                     Version versionKey;
-                    if (Version.TryParse(keyVersionStr, out versionKey) && versionKey > registryVersion)
+                    if (Version.TryParse(keyVersionStr, out versionKey) && versionKey >= registryVersion)
                     {
                         registryVersion = versionKey;
                         version = registryVersion.ToString();
@@ -176,10 +178,63 @@
                         }
                     }
                 }
+
+                // check it in VS 2017
+                if (!Directory.Exists(this.Options["MSBuildToolsPath"]))
+                {
+                    var pathValue = Registry.LocalMachine.OpenSubKey(visualStudio2017RegistryPath).GetValue("15.0");
+                    if (pathValue != null)
+                    {
+                        var pathFromVCorMSBuild = Path.Combine(pathValue.ToString(), "MSBuild");
+                        if (!Directory.Exists(pathFromVCorMSBuild))
+                        {
+                            var dirInfo = new DirectoryInfo(Path.Combine(pathFromVCorMSBuild, "..\\MSBuild"));
+                            if (dirInfo.Exists)
+                            {
+                                pathFromVCorMSBuild = dirInfo.FullName;
+                            }
+                        }
+
+                        var toolsPath = Path.Combine(pathFromVCorMSBuild, @"15.0\bin");
+
+                        this.Options["MSBuildExtensionsPath"] = pathFromVCorMSBuild;
+                        this.Options["MSBuildExtensionsPath32"] = pathFromVCorMSBuild;
+                        this.Options["MSBuildExtensionsPath64"] = pathFromVCorMSBuild.Replace(@" (x86)\", @"\");
+
+                        this.Options["MSBuildToolsPath"] = toolsPath;
+                        this.Options["MSBuildToolsVersion"] = "15.0";
+
+                        // set HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\.NETFramework
+                        // MSBuildFrameworkToolsPath
+                        var keyNet = Registry.LocalMachine.OpenSubKey(netframeworkRegistryPath);
+                        Version netRegistryVersion = new Version("4.0.30319");
+                        foreach (var keyVersionStr in keyNet.GetSubKeyNames())
+                        {
+                            if (!keyVersionStr.StartsWith("v"))
+                            {
+                                continue;
+                            }
+
+                            Version versionKey;
+                            if (Version.TryParse(keyVersionStr.Substring(1), out versionKey) && versionKey >= netRegistryVersion)
+                            {
+                                netRegistryVersion = versionKey;
+
+                                var frameworkToolsPath = Path.Combine(keyNet.GetValue("InstallRoot").ToString(), keyVersionStr);
+                                if (Directory.Exists(frameworkToolsPath))
+                                {
+                                    this.Options["MSBuildFrameworkToolsPath"] = frameworkToolsPath;
+                                    this.Options["MSBuildFrameworkToolsPath32"] = frameworkToolsPath;
+                                }
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception)
             {
             }
+
 
             if (!Directory.Exists(this.Options["MSBuildToolsPath"]))
             {
