@@ -31,9 +31,13 @@
             this.Options = options;
             this.Dictionaries = new Dictionary<string, List<string>>();
             this.Targets = new List<string>();
+            this.TargetBeforeTargets = new Dictionary<string, List<string>>();
+            this.TargetAfterTargets = new Dictionary<string, List<string>>();
+            this.TargetsDependsOn = new Dictionary<string, List<string>>();
+            this.TargetsElemnts = new Dictionary<string, XElement>();
         }
 
-        public IList<string> Sources { get; private set; }
+    public IList<string> Sources { get; private set; }
 
         public IList<string> Content { get; private set; }
 
@@ -47,16 +51,20 @@
 
         public IList<string> Targets { get; private set; }
 
-        public IDictionary<string, string> TargetsBefore { get; private set; }
+        public IDictionary<string, List<string>> TargetBeforeTargets { get; private set; }
+
+        public IDictionary<string, List<string>> TargetAfterTargets { get; private set; }
 
         public IDictionary<string, List<string>> TargetsDependsOn { get; private set; }
+
+        public IDictionary<string, XElement> TargetsElemnts { get; private set; }
 
         public string InitialTargets
         {
             set
             {
                 this.initialTargets = value;
-                this.Targets = (value ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                this.Targets = ToListOfTargets(value);
             }
 
             get
@@ -79,6 +87,8 @@
                 }
 
                 BuildWellKnownValues("Project", fileInfo.FullName);
+
+                this.InitialTargets = "Build";
                 return this.LoadProjectInternal(fileInfo.FullName);
             }
             finally
@@ -96,6 +106,11 @@
             }
 
             return element.Attribute("Include").Value;
+        }
+
+        private static List<string> ToListOfTargets(string value)
+        {
+            return (value ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).Distinct().ToList();
         }
 
         private bool LoadProjectInternal(string projectPath)
@@ -134,7 +149,11 @@
 
             Directory.SetCurrentDirectory(this.folder);
 
-            this.InitialTargets = project.Root.Attribute("InitialTargets")?.Value ?? string.Empty;
+            var initialTargets = project.Root.Attribute("InitialTargets")?.Value ?? string.Empty;
+            if (!string.IsNullOrEmpty(initialTargets))
+            {
+                this.InitialTargets = string.Join(";", this.InitialTargets, initialTargets);
+            }
 
             foreach (var element in project.Root.Elements())
             {
@@ -348,7 +367,7 @@
         {
             var cloned = new ProjectProperties(this.Options.Where(k => k.Key.StartsWith("MSBuild")).ToDictionary(k => k.Key, v => v.Value));
             var folder = this.folder;
-            var initialTarget = this.initialTargets;
+            var initialTarget = this.InitialTargets;
             var value = element.Attribute("Project").Value;
             var result = this.LoadProjectInternal(this.FillProperties(value));
             foreach (var copyCloned in cloned)
@@ -359,7 +378,7 @@
             this.folder = folder;
             Directory.SetCurrentDirectory(this.folder);
 
-            this.initialTargets = initialTarget;
+            this.InitialTargets = initialTarget;
 
             return result;
         }
@@ -444,15 +463,100 @@
         private bool ProcessTarget(XElement element)
         {
             var name = element.Attribute("Name").Value;
-            if (this.Targets.Contains(name) || (this.Options["CompileDependsOn"]?.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Any(i => i.Trim() == name) ?? false))
+
+            var dependsOnAttribute = element.Attribute("DependsOnTargets");
+            if (dependsOnAttribute != null)
             {
-                foreach (var targetElement in element.Elements())
+                var dependsOn = this.FillProperties(dependsOnAttribute.Value);
+                this.TargetsDependsOn.Add(name, ToListOfTargets(dependsOn));
+            }
+
+            var beforeTargetsAttribute = element.Attribute("BeforeTargets");
+            if (beforeTargetsAttribute != null)
+            {
+                var beforeTargets = this.FillProperties(beforeTargetsAttribute.Value);
+                this.TargetBeforeTargets.Add(name, ToListOfTargets(beforeTargets));
+            }
+
+            var afterTargetsAttribute = element.Attribute("AfterTargets");
+            if (afterTargetsAttribute != null)
+            {
+                var afterTargets = this.FillProperties(afterTargetsAttribute.Value);
+                this.TargetAfterTargets.Add(name, ToListOfTargets(afterTargets));
+            }
+
+            // TODO: remove dependency on hacked code  - ToListOfTargets(this.Options["CompileDependsOn"]).Contains(name)
+            if (this.Targets.Contains(name) || ToListOfTargets(this.Options["CompileDependsOn"]).Contains(name))
+            {
+                ExecuteTarget(element);
+            }
+            else if (element.HasElements)
+            {
+                // store nodes for later usage
+                this.TargetsElemnts.Add(name, element);
+            }
+
+            return true;
+        }
+
+        private bool ExecuteTarget(string name)
+        {
+            if (this.TargetsElemnts.TryGetValue(name, out XElement element))
+            {
+                return ExecuteTarget(element);
+            }
+
+            return false;
+        }
+
+        private bool ExecuteTarget(XElement element)
+        {
+            var name = element.Attribute("Name").Value;
+
+            // Before
+            if (!this.ExecuteTargetsBeforeTarget(name))
+            {
+                return false;
+            }
+
+            // Depends on
+            // TODO:
+
+            // Target
+            foreach (var targetElement in element.Elements())
+            {
+                if (!ProcessElement(targetElement))
                 {
-                    if (!ProcessElement(targetElement))
-                    {
-                        return false;
-                    }
+                    return false;
                 }
+            }
+
+            // After
+            if (!this.ExecuteTargetsAfterTarget(name))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool ExecuteTargetsBeforeTarget(string beforeTarget)
+        {
+            var targetsToExecute = this.TargetBeforeTargets.Where(kv => kv.Value.Contains(beforeTarget)).Select(kv => kv.Key);
+            foreach(var targetToExecute in targetsToExecute)
+            {
+                ExecuteTarget(targetToExecute);
+            }
+
+            return true;
+        }
+
+        private bool ExecuteTargetsAfterTarget(string afterTarget)
+        {
+            var targetsToExecute = this.TargetAfterTargets.Where(kv => kv.Value.Contains(afterTarget)).Select(kv => kv.Key);
+            foreach (var targetToExecute in targetsToExecute)
+            {
+                ExecuteTarget(targetToExecute);
             }
 
             return true;
