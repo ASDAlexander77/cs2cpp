@@ -20,7 +20,7 @@
         private static XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
 
         private string folder;
-        private string initialTarget;
+        private string initialTargets;
 
         public ProjectLoader(IDictionary<string, string> options)
         {
@@ -30,6 +30,7 @@
             this.Errors = new List<string>();
             this.Options = options;
             this.Dictionaries = new Dictionary<string, List<string>>();
+            this.Targets = new List<string>();
         }
 
         public IList<string> Sources { get; private set; }
@@ -43,6 +44,26 @@
         public IDictionary<string, string> Options { get; private set; }
 
         public IDictionary<string, List<string>> Dictionaries { get; private set; }
+
+        public IList<string> Targets { get; private set; }
+
+        public IDictionary<string, string> TargetsBefore { get; private set; }
+
+        public IDictionary<string, List<string>> TargetsDependsOn { get; private set; }
+
+        public string InitialTargets
+        {
+            set
+            {
+                this.initialTargets = value;
+                this.Targets = (value ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            }
+
+            get
+            {
+                return this.initialTargets;
+            }
+        }
 
         public bool Load(string projectFilePath)
         {
@@ -113,7 +134,7 @@
 
             Directory.SetCurrentDirectory(this.folder);
 
-            this.initialTarget = project.Root.Attribute("InitialTargets")?.Value ?? string.Empty;
+            this.InitialTargets = project.Root.Attribute("InitialTargets")?.Value ?? string.Empty;
 
             foreach (var element in project.Root.Elements())
             {
@@ -327,7 +348,7 @@
         {
             var cloned = new ProjectProperties(this.Options.Where(k => k.Key.StartsWith("MSBuild")).ToDictionary(k => k.Key, v => v.Value));
             var folder = this.folder;
-            var initialTarget = this.initialTarget;
+            var initialTarget = this.initialTargets;
             var value = element.Attribute("Project").Value;
             var result = this.LoadProjectInternal(this.FillProperties(value));
             foreach (var copyCloned in cloned)
@@ -338,7 +359,7 @@
             this.folder = folder;
             Directory.SetCurrentDirectory(this.folder);
 
-            this.initialTarget = initialTarget;
+            this.initialTargets = initialTarget;
 
             return result;
         }
@@ -423,7 +444,7 @@
         private bool ProcessTarget(XElement element)
         {
             var name = element.Attribute("Name").Value;
-            if (name == this.initialTarget || (this.Options["CompileDependsOn"]?.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Any(i => i.Trim() == name) ?? false))
+            if (this.Targets.Contains(name) || (this.Options["CompileDependsOn"]?.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Any(i => i.Trim() == name) ?? false))
             {
                 foreach (var targetElement in element.Elements())
                 {
