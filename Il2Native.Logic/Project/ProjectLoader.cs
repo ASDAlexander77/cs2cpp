@@ -1,4 +1,5 @@
-﻿namespace Il2Native.Logic.Project
+﻿////#define TARGETS
+namespace Il2Native.Logic.Project
 {
     using Il2Native.Logic.Project.Tasks;
     using Microsoft.Win32;
@@ -31,10 +32,12 @@
             this.Options = options;
             this.Dictionaries = new Dictionary<string, List<string>>();
             this.Targets = new List<string>();
+#if TARGETS
             this.TargetBeforeTargets = new Dictionary<string, List<string>>();
             this.TargetAfterTargets = new Dictionary<string, List<string>>();
             this.TargetsDependsOn = new Dictionary<string, List<string>>();
-            this.TargetsElemnts = new Dictionary<string, XElement>();
+            this.TargetsElements = new Dictionary<string, XElement>();
+#endif
         }
 
     public IList<string> Sources { get; private set; }
@@ -51,13 +54,15 @@
 
         public IList<string> Targets { get; private set; }
 
+#if TARGETS
         public IDictionary<string, List<string>> TargetBeforeTargets { get; private set; }
 
         public IDictionary<string, List<string>> TargetAfterTargets { get; private set; }
 
         public IDictionary<string, List<string>> TargetsDependsOn { get; private set; }
 
-        public IDictionary<string, XElement> TargetsElemnts { get; private set; }
+        public IDictionary<string, XElement> TargetsElements { get; private set; }
+#endif
 
         public string InitialTargets
         {
@@ -87,9 +92,7 @@
                 }
 
                 BuildWellKnownValues("Project", fileInfo.FullName);
-
-                this.InitialTargets = "Build";
-                return this.LoadProjectInternal(fileInfo.FullName);
+                return this.LoadProjectInternal(fileInfo.FullName, true);
             }
             finally
             {
@@ -113,7 +116,7 @@
             return (value ?? string.Empty).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).Distinct().ToList();
         }
 
-        private bool LoadProjectInternal(string projectPath)
+        private bool LoadProjectInternal(string projectPath, bool root = false)
         {
             var projectSubPath = !string.IsNullOrWhiteSpace(projectPath) ? Path.GetDirectoryName(projectPath) : string.Empty;
             var projectFileName = Path.GetFileName(projectPath);
@@ -163,9 +166,16 @@
                 }
             }
 
-            foreach (var reference in this.LoadReferencesFromProject(projectExistPath, project))
+            if (root)
             {
-                this.References.Add(reference);
+                foreach (var reference in this.LoadReferencesFromProject(projectExistPath, project))
+                {
+                    this.References.Add(reference);
+                }
+
+#if TARGETS
+                return ExecuteTarget("Compile");
+#endif
             }
 
             return true;
@@ -446,13 +456,40 @@
 
         private void AddValueTo(XElement element)
         {
-            var path = PathCombine(this.FillProperties(element.Attribute("Include").Value));
-            if (!this.Dictionaries.ContainsKey(element.Name.LocalName))
+            var @include = element.Attribute("Include");
+            if (@include != null)
             {
-                this.Dictionaries[element.Name.LocalName] = new List<string>();
+                var path = PathCombine(this.FillProperties(@include.Value));
+                if (!this.Dictionaries.ContainsKey(element.Name.LocalName))
+                {
+                    this.Dictionaries[element.Name.LocalName] = new List<string>();
+                }
+
+                this.Dictionaries[element.Name.LocalName].Add(path);
             }
 
-            this.Dictionaries[element.Name.LocalName].Add(path);
+            var remove = element.Attribute("Remove");
+            if (remove != null)
+            {
+                if (!this.Dictionaries.ContainsKey(element.Name.LocalName))
+                {
+                    return;
+                }
+
+                var dictionary = GetDictionary(remove.Value);
+                if (dictionary != null)
+                {
+                    foreach(var item in dictionary)
+                    {
+                        this.Dictionaries[element.Name.LocalName].Remove(item);
+                    }
+                }
+                else
+                {
+                    var path = PathCombine(this.FillProperties(remove.Value));
+                    this.Dictionaries[element.Name.LocalName].Remove(path);
+                }
+            }
         }
 
         private void ProcessError(XElement element)
@@ -464,10 +501,16 @@
         {
             var name = element.Attribute("Name").Value;
 
+#if TARGETS
             var dependsOnAttribute = element.Attribute("DependsOnTargets");
             if (dependsOnAttribute != null)
             {
                 var dependsOn = this.FillProperties(dependsOnAttribute.Value);
+                if (this.TargetsDependsOn.ContainsKey(name))
+                {
+                    this.TargetsDependsOn.Remove(name);
+                }
+
                 this.TargetsDependsOn.Add(name, ToListOfTargets(dependsOn));
             }
 
@@ -475,6 +518,11 @@
             if (beforeTargetsAttribute != null)
             {
                 var beforeTargets = this.FillProperties(beforeTargetsAttribute.Value);
+                if (this.TargetBeforeTargets.ContainsKey(name))
+                {
+                    this.TargetBeforeTargets.Remove(name);
+                }
+
                 this.TargetBeforeTargets.Add(name, ToListOfTargets(beforeTargets));
             }
 
@@ -482,29 +530,34 @@
             if (afterTargetsAttribute != null)
             {
                 var afterTargets = this.FillProperties(afterTargetsAttribute.Value);
+                if (this.TargetAfterTargets.ContainsKey(name))
+                {
+                    this.TargetAfterTargets.Remove(name);
+                }
+
                 this.TargetAfterTargets.Add(name, ToListOfTargets(afterTargets));
             }
 
-            // TODO: remove dependency on hacked code  - ToListOfTargets(this.Options["CompileDependsOn"]).Contains(name)
-            if (this.Targets.Contains(name) || ToListOfTargets(this.Options["CompileDependsOn"]).Contains(name))
+            if (this.Targets.Contains(name))
             {
                 return ExecuteTarget(element);
             }
             else if (element.HasElements)
             {
                 // store nodes for later usage
-                this.TargetsElemnts.Add(name, element);
+                if (this.TargetsElements.ContainsKey(name))
+                {
+                    this.TargetsElements.Remove(name);
+                }
+
+                this.TargetsElements.Add(name, element);
             }
-
-            return true;
-        }
-
-        private bool ExecuteTarget(string name)
-        {
-            if (this.TargetsElemnts.TryGetValue(name, out XElement element))
+#else
+            if (this.Targets.Contains(name) || name == "GenerateResourcesSource" || name == "AnnotateProjectReference")
             {
                 return ExecuteTarget(element);
             }
+#endif
 
             return true;
         }
@@ -513,6 +566,7 @@
         {
             var name = element.Attribute("Name").Value;
 
+#if TARGETS
             // Before
             if (!this.ExecuteTargetsBeforeTarget(name))
             {
@@ -521,7 +575,7 @@
 
             // Depends on
             this.ExecuteTargetsDependsOn(name);
-
+#endif
             // Target
             foreach (var targetElement in element.Elements())
             {
@@ -531,11 +585,41 @@
                 }
             }
 
+#if TARGETS
             // After
             if (!this.ExecuteTargetsAfterTarget(name))
             {
                 return false;
             }
+#endif
+
+            return true;
+        }
+
+#if TARGETS
+        private bool ExecuteTarget(string name)
+        {
+            if (this.TargetsElements.TryGetValue(name, out XElement element))
+            {
+                return ExecuteTarget(element);
+            }
+
+#if TARGETS
+            // Before
+            if (!this.ExecuteTargetsBeforeTarget(name))
+            {
+                return false;
+            }
+
+            // Depends on
+            this.ExecuteTargetsDependsOn(name);
+
+            // After
+            if (!this.ExecuteTargetsAfterTarget(name))
+            {
+                return false;
+            }
+#endif
 
             return true;
         }
@@ -589,6 +673,7 @@
 
             return result;
         }
+#endif
 
         private bool ProcessChoose(XElement element)
         {
