@@ -488,7 +488,7 @@
             // TODO: remove dependency on hacked code  - ToListOfTargets(this.Options["CompileDependsOn"]).Contains(name)
             if (this.Targets.Contains(name) || ToListOfTargets(this.Options["CompileDependsOn"]).Contains(name))
             {
-                ExecuteTarget(element);
+                return ExecuteTarget(element);
             }
             else if (element.HasElements)
             {
@@ -506,7 +506,7 @@
                 return ExecuteTarget(element);
             }
 
-            return false;
+            return true;
         }
 
         private bool ExecuteTarget(XElement element)
@@ -520,7 +520,7 @@
             }
 
             // Depends on
-            // TODO:
+            this.ExecuteTargetsDependsOn(name);
 
             // Target
             foreach (var targetElement in element.Elements())
@@ -543,23 +543,51 @@
         private bool ExecuteTargetsBeforeTarget(string beforeTarget)
         {
             var targetsToExecute = this.TargetBeforeTargets.Where(kv => kv.Value.Contains(beforeTarget)).Select(kv => kv.Key);
-            foreach(var targetToExecute in targetsToExecute)
+            var result = true;
+            foreach (var targetToExecute in targetsToExecute)
             {
-                ExecuteTarget(targetToExecute);
+                result &= ExecuteTarget(targetToExecute);
+                if (!result)
+                {
+                    break;
+                }
             }
 
-            return true;
+            return result;
         }
 
         private bool ExecuteTargetsAfterTarget(string afterTarget)
         {
             var targetsToExecute = this.TargetAfterTargets.Where(kv => kv.Value.Contains(afterTarget)).Select(kv => kv.Key);
+            var result = true;
             foreach (var targetToExecute in targetsToExecute)
             {
-                ExecuteTarget(targetToExecute);
+                result &= ExecuteTarget(targetToExecute);
+                if (!result)
+                {
+                    break;
+                }
             }
 
-            return true;
+            return result;
+        }
+
+        private bool ExecuteTargetsDependsOn(string name)
+        {
+            var result = true;
+            if (this.TargetsDependsOn.TryGetValue(name, out List<string> targets))
+            {
+                foreach (var targetToExecute in targets)
+                {
+                    result &= ExecuteTarget(targetToExecute);
+                    if (!result)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            return result;
         }
 
         private bool ProcessChoose(XElement element)
