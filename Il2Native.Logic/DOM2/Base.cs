@@ -420,6 +420,14 @@ namespace Il2Native.Logic.DOM2
                 return throwStatement;
             }
 
+            var boundThrowExpression = boundBody as BoundThrowExpression;
+            if (boundThrowExpression != null)
+            {
+                var throwExpression = new ThrowExpression();
+                throwExpression.Parse(boundThrowExpression);
+                return throwExpression;
+            }
+
             var boundTryStatement = boundBody as BoundTryStatement;
             if (boundTryStatement != null)
             {

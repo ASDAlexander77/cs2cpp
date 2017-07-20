@@ -13,6 +13,7 @@ namespace Il2Native.Logic.DOM2
         TypeDef,
         TryStatement,
         ThrowStatement,
+        ThrowExpression,
         ThisReference,
         SwitchStatement,
         StackAllocArrayCreation,

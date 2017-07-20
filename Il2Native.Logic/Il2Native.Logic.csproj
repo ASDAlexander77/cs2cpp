@@ -105,6 +105,7 @@
     <Compile Include="DOM2\SwitchSection.cs" />
     <Compile Include="DOM2\SwitchStatement.cs" />
     <Compile Include="DOM2\ThisReference.cs" />
+    <Compile Include="DOM2\ThrowExpression.cs" />
     <Compile Include="DOM2\ThrowStatement.cs" />
     <Compile Include="DOM2\TryStatement.cs" />
     <Compile Include="DOM2\TypeDefStatement.cs" />
