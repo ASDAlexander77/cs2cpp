@@ -22,6 +22,7 @@ namespace Il2Native.Logic.Project
 
         private string folder;
         private string initialTargets;
+        private string defaultTargets;
 
         public ProjectLoader(IDictionary<string, string> options)
         {
@@ -69,12 +70,26 @@ namespace Il2Native.Logic.Project
             set
             {
                 this.initialTargets = value;
-                this.Targets = ToListOfTargets(value);
+                this.Targets = ToListOfTargets(string.Join(";", this.initialTargets ?? string.Empty, this.defaultTargets ?? string.Empty));
             }
 
             get
             {
                 return this.initialTargets;
+            }
+        }
+
+        public string DefaultTargets
+        {
+            set
+            {
+                this.defaultTargets = value;
+                this.Targets = ToListOfTargets(string.Join(";", this.initialTargets ?? string.Empty, this.defaultTargets ?? string.Empty));
+            }
+
+            get
+            {
+                return this.defaultTargets;
             }
         }
 
@@ -158,6 +173,12 @@ namespace Il2Native.Logic.Project
                 this.InitialTargets = string.Join(";", this.InitialTargets, initialTargets);
             }
 
+            var defaultTargets = project.Root.Attribute("DefaultTargets")?.Value ?? string.Empty;
+            if (!string.IsNullOrEmpty(defaultTargets))
+            {
+                this.DefaultTargets = string.Join(";", this.DefaultTargets, defaultTargets);
+            }
+
             foreach (var element in project.Root.Elements())
             {
                 if (!ProcessElement(element))
@@ -172,10 +193,6 @@ namespace Il2Native.Logic.Project
                 {
                     this.References.Add(reference);
                 }
-
-#if TARGETS
-                return ExecuteTarget("Compile");
-#endif
             }
 
             return true;
@@ -377,7 +394,8 @@ namespace Il2Native.Logic.Project
         {
             var cloned = new ProjectProperties(this.Options.Where(k => k.Key.StartsWith("MSBuild")).ToDictionary(k => k.Key, v => v.Value));
             var folder = this.folder;
-            var initialTarget = this.InitialTargets;
+            var initialTargets = this.InitialTargets;
+            var defaultTargets = this.DefaultTargets;
             var value = element.Attribute("Project").Value;
             var result = this.LoadProjectInternal(this.FillProperties(value));
             foreach (var copyCloned in cloned)
@@ -388,7 +406,8 @@ namespace Il2Native.Logic.Project
             this.folder = folder;
             Directory.SetCurrentDirectory(this.folder);
 
-            this.InitialTargets = initialTarget;
+            this.InitialTargets = initialTargets;
+            this.DefaultTargets = defaultTargets;
 
             return result;
         }
@@ -567,14 +586,17 @@ namespace Il2Native.Logic.Project
             var name = element.Attribute("Name").Value;
 
 #if TARGETS
+            // Depends on - first: Read https://msdn.microsoft.com/en-us/library/ee216359.aspx
+            if (!this.ExecuteTargetsDependsOn(name))
+            {
+                return false;
+            }
+
             // Before
             if (!this.ExecuteTargetsBeforeTarget(name))
             {
                 return false;
             }
-
-            // Depends on
-            this.ExecuteTargetsDependsOn(name);
 #endif
             // Target
             foreach (var targetElement in element.Elements())
