@@ -182,6 +182,7 @@
     <Compile Include="Project\IntrinsicFunctions.cs" />
     <Compile Include="Project\ProjectLoader.cs" />
     <Compile Include="Project\ProjectProperties.cs" />
+    <Compile Include="Project\Tasks\FindBestConfigurations.cs" />
     <Compile Include="Project\Tasks\GenerateResourcesCode.cs" />
     <Compile Include="Project\Tasks\Task.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

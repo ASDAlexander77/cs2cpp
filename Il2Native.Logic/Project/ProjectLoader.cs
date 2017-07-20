@@ -390,6 +390,23 @@ namespace Il2Native.Logic.Project
                     generateResourcesCode.DebugOnly = this.Options["Configuration"] != "Release";
                     generateResourcesCode.Execute();
                     break;
+
+                case "FindBestConfigurations":
+                    // custom task
+                    var findBestConfigurations = new FindBestConfigurations();
+                    findBestConfigurations.Properties = this.GetDictionary(element.Attribute("Properties").Value);
+                    findBestConfigurations.PropertyValues = this.GetDictionary(element.Attribute("PropertyValues").Value);
+                    findBestConfigurations.SupportedConfigurations = FillProperties(element.Attribute("SupportedConfigurations").Value);
+                    findBestConfigurations.Configurations = this.FillProperties(element.Attribute("Configurations").Value);
+                    findBestConfigurations.Execute();
+
+                    var output = element.Element(ns + "Output");
+                    if (output != null)
+                    {
+                        this.Options[FillProperties(output.Attribute("PropertyName").Value)] = findBestConfigurations.GetType().GetProperty(this.FillProperties(output.Attribute("TaskParameter").Value)).GetValue(findBestConfigurations)?.ToString() ?? string.Empty;
+                    }
+
+                    break;
             }
 
             return true;
