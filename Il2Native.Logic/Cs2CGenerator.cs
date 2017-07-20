@@ -155,7 +155,7 @@ namespace Il2Native.Logic
                 return null;
             }
 
-            var assemblyMetadata = this.CompileWithRoslynInMemory(this.Sources);
+            var assemblyMetadata = this.Compile(this.Sources);
             if (assemblyMetadata == null)
             {
                 return null;
@@ -228,10 +228,55 @@ namespace Il2Native.Logic
             return metadata.GetAssembly().Identity;
         }
 
-        private AssemblyMetadata CompileWithRoslynInMemory(string[] source)
+        private AssemblyMetadata Compile(string[] source)
         {
-            var srcFileName = Path.GetFileNameWithoutExtension(this.FirstSource);
-            var assemblyName = srcFileName;
+            var assemblyName = Path.GetFileNameWithoutExtension(this.FirstSource);
+
+            var cacheFolder = ".assembliesCache";
+            if (!Directory.Exists(cacheFolder))
+            {
+                Directory.CreateDirectory(cacheFolder);
+            }
+
+            var dllFilePath = Path.Combine(cacheFolder, string.Concat(assemblyName, ".dll"));
+            var pdbFilePath = Path.Combine(cacheFolder, string.Concat(assemblyName, ".pdb"));
+            using (var dllStream = new FileStream(dllFilePath, FileMode.CreateNew))
+            {
+                using (var pdbStream = new FileStream(pdbFilePath, FileMode.CreateNew))
+                {
+                    if (!CompileTo(source, dllStream, pdbStream))
+                    {
+                        return null;
+                    }
+                }
+            }
+
+            return AssemblyMetadata.CreateFromFile(dllFilePath);
+        }
+
+        private AssemblyMetadata CompileInMemory(string[] source)
+        {
+            var assemblyName = Path.GetFileNameWithoutExtension(this.FirstSource);
+
+            var dllStream = new MemoryStream();
+            using (var pdbStream = new MemoryStream())
+            {
+                if (CompileTo(source, dllStream, pdbStream))
+                {
+                    // reset stream
+                    dllStream.Flush();
+                    dllStream.Position = 0;
+
+                    return AssemblyMetadata.CreateFromStream(dllStream, false);
+                }
+            }
+
+            return null;
+        }
+
+        private bool CompileTo(string[] source, Stream dllStream, Stream pdbStream)
+        {
+            var assemblyName = Path.GetFileNameWithoutExtension(this.FirstSource);
 
             var defineSeparators = new[] { ';', ',', ' ' };
             var syntaxTrees =
@@ -254,9 +299,6 @@ namespace Il2Native.Logic
                                                                                  .WithConcurrentBuild(true);
 
             var compilation = CSharpCompilation.Create(assemblyName, syntaxTrees, assemblies.ToArray(), options);
-
-            var dllStream = new MemoryStream();
-            var pdbStream = new MemoryStream();
 
             PEModuleBuilder.OnMethodBoundBodySynthesizedDelegate peModuleBuilderOnOnMethodBoundBodySynthesized = (symbol, body) =>
             {
@@ -296,20 +338,10 @@ namespace Il2Native.Logic
                     Console.WriteLine(diagnostic);
                 }
 
-                if (errors.Count > 0)
-                {
-                    return null;
-                }
+                return errors.Count == 0;
             }
 
-            dllStream.Flush();
-            dllStream.Position = 0;
-
-            pdbStream.Flush();
-            pdbStream.Position = 0;
-
-            // Successful Compile
-            return AssemblyMetadata.CreateFromStream(dllStream, false);
+            return true;
         }
 
         /// <summary>
