@@ -30,6 +30,7 @@ namespace Il2Native.Logic.Project
             this.Content = new List<string>();
             this.References = new List<string>();
             this.Errors = new List<string>();
+            this.Warnings = new List<string>();
             this.Options = options;
             this.Dictionaries = new Dictionary<string, List<string>>();
             this.Targets = new List<string>();
@@ -48,6 +49,8 @@ namespace Il2Native.Logic.Project
         public IList<string> References { get; private set; }
 
         public IList<string> Errors { get; private set; }
+
+        public IList<string> Warnings { get; private set; }
 
         public IDictionary<string, string> Options { get; private set; }
 
@@ -302,7 +305,6 @@ namespace Il2Native.Logic.Project
             {
             }
 
-
             if (!Directory.Exists(this.Options["MSBuildToolsPath"]))
             {
                 var msg = "Install MSBuild from https://www.visualstudio.com/thank-you-downloading-visual-studio/?sku=BuildTools&rel=15";
@@ -367,6 +369,9 @@ namespace Il2Native.Logic.Project
                 case "Error":
                     ProcessError(element);
                     return false;
+                case "Warning":
+                    ProcessWarning(element);
+                    break;
                 case "Choose":
                     if (!ProcessChoose(element))
                     {
@@ -514,6 +519,11 @@ namespace Il2Native.Logic.Project
         private void ProcessError(XElement element)
         {
             this.Errors.Add(this.FillProperties(element.Attribute("Text").Value));
+        }
+
+        private void ProcessWarning(XElement element)
+        {
+            this.Warnings.Add(this.FillProperties(element.Attribute("Text").Value));
         }
 
         private bool ProcessTarget(XElement element)
@@ -1060,7 +1070,7 @@ namespace Il2Native.Logic.Project
                         }
                         else
                         {
-                            var foundMethod = targetType.GetMethods().FirstOrDefault(m => m.Name == functionName && m.GetParameters().Count() == parameters.Count() && m.GetParameters().Zip(parameters, (a, b) => Tuple.Create(a, b)).All(IsAssignable));
+                            var foundMethod = targetType.GetMethods().FirstOrDefault(m => string.Compare(m.Name, functionName, true) == 0 && m.GetParameters().Count() == parameters.Count() && m.GetParameters().Zip(parameters, (a, b) => Tuple.Create(a, b)).All(IsAssignable));
                             Debug.Assert(foundMethod != null, "Method could not be found");
                             if (foundMethod != null)
                             {

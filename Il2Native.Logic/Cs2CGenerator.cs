@@ -418,11 +418,29 @@ namespace Il2Native.Logic
                     Console.WriteLine(diagnostic);
                 }
 
+                if (projectLoader.Warnings.Any())
+                {
+                    Console.WriteLine(@"Project Warnings: {0}", projectLoader.Warnings.Count());
+                    foreach (var diagnostic in projectLoader.Warnings)
+                    {
+                        Console.WriteLine(diagnostic);
+                    }
+                }
+
                 this.Sources = new string[0];
                 this.Impl = new string[0];
                 this.References = new string[0];
 
                 return;
+            }
+
+            if (projectLoader.Warnings.Any())
+            {
+                Console.WriteLine(@"Project Warnings: {0}", projectLoader.Warnings.Count());
+                foreach (var diagnostic in projectLoader.Warnings)
+                {
+                    Console.WriteLine(diagnostic);
+                }
             }
 
             DebugOutput = this.Options["Configuration"] != "Release";
