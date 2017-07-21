@@ -876,12 +876,12 @@ namespace Il2Native.Logic.Project
                 return !ExecuteConditionBool(right);
             }
 
-            if (condition.Trim() == "true")
+            if (condition.ToLowerInvariant().Trim() == "true")
             {
                 return true;
             }
 
-            if (condition.Trim() == "false")
+            if (condition.ToLowerInvariant().Trim() == "false")
             {
                 return false;
             }
