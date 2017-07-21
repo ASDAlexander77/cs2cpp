@@ -37,6 +37,7 @@ namespace Il2Native.Logic
         /// </summary>
         public Cs2CGenerator()
         {
+            this.AssembliesCachePath = ".assembliesCache";
         }
 
         /// <summary>
@@ -62,6 +63,10 @@ namespace Il2Native.Logic
             // loading corelib if provided
             var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
             this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
+            if (this.CoreLibPath != null)
+            {
+                this.CoreLibPath = this.ResolveAssemblyReferense(this.CoreLibPath);
+            }
 
             // loading project or files
             if (this.FirstSource.EndsWith(".csproj"))
@@ -94,6 +99,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public string DefaultDllLocations { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public string AssembliesCachePath { get; set; }
 
         public IDictionary<string, string> Options { get; private set; }
 
@@ -187,7 +196,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var resolvedFilePath = this.ResolveReferencePath(assemblyIdentity);
+            var resolvedFilePath = this.ResolveAssemblyReferense(assemblyIdentity);
             if (resolvedFilePath == null)
             {
                 return;
@@ -232,23 +241,28 @@ namespace Il2Native.Logic
         {
             var assemblyName = Path.GetFileNameWithoutExtension(this.FirstSource);
 
-            var cacheFolder = ".assembliesCache";
+            var cacheFolder = this.AssembliesCachePath;
             if (!Directory.Exists(cacheFolder))
             {
                 Directory.CreateDirectory(cacheFolder);
             }
 
+            var compiled = false;
             var dllFilePath = Path.Combine(cacheFolder, string.Concat(assemblyName, ".dll"));
             var pdbFilePath = Path.Combine(cacheFolder, string.Concat(assemblyName, ".pdb"));
-            using (var dllStream = new FileStream(dllFilePath, FileMode.CreateNew))
+            using (var dllStream = new FileStream(dllFilePath, FileMode.Create))
             {
-                using (var pdbStream = new FileStream(pdbFilePath, FileMode.CreateNew))
+                using (var pdbStream = new FileStream(pdbFilePath, FileMode.Create))
                 {
-                    if (!CompileTo(source, dllStream, pdbStream))
-                    {
-                        return null;
-                    }
+                    compiled = CompileTo(source, dllStream, pdbStream);
                 }
+            }
+
+            if (!compiled)
+            {
+                File.Delete(dllFilePath);
+                File.Delete(pdbFilePath);
+                return null;
             }
 
             return AssemblyMetadata.CreateFromFile(dllFilePath);
@@ -352,7 +366,7 @@ namespace Il2Native.Logic
         /// </returns>
         private AssemblyMetadata GetAssemblyMetadata(AssemblyIdentity assemblyIdentity)
         {
-            var resolveReferencePath = this.ResolveReferencePath(assemblyIdentity);
+            var resolveReferencePath = this.ResolveAssemblyReferense(assemblyIdentity);
             if (string.IsNullOrWhiteSpace(resolveReferencePath))
             {
                 return null;
@@ -530,12 +544,17 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private string ResolveReferencePath(AssemblyIdentity assemblyIdentity)
+        private string ResolveAssemblyReferense(AssemblyIdentity assemblyIdentity)
         {
             var dllFileName = string.Concat(assemblyIdentity.Name, ".dll");
+            return ResolveAssemblyReferense(dllFileName);
+        }
+
+        private string ResolveAssemblyReferense(string dllFileName)
+        {
             if (File.Exists(dllFileName))
             {
-                return Path.GetFullPath(dllFileName);
+                return new FileInfo(Path.GetFullPath(dllFileName)).FullName;
             }
 
             if (!string.IsNullOrWhiteSpace(this.DefaultDllLocations))
@@ -543,50 +562,15 @@ namespace Il2Native.Logic
                 var dllFullName = Path.Combine(this.DefaultDllLocations, dllFileName);
                 if (File.Exists(dllFullName))
                 {
-                    return dllFullName;
+                    return new FileInfo(dllFullName).FullName;
                 }
             }
 
-            var windir = Environment.GetEnvironmentVariable("windir");
-
-            var dllFullNameGAC = Path.Combine(windir, string.Format(@"Microsoft.NET\assembly\GAC_MSIL\{0}\{1}_{2}_{3}_{4}", assemblyIdentity.Name, "4.0", assemblyIdentity.Version, assemblyIdentity.CultureName, GetAssemblyHashString(assemblyIdentity)));
-            if (File.Exists(dllFullNameGAC))
+            var dllFullNameCache = Path.Combine(this.AssembliesCachePath, dllFileName);
+            if (File.Exists(dllFullNameCache))
             {
-                return dllFullNameGAC;
+                return new FileInfo(dllFullNameCache).FullName;
             }
-
-            // find first possible
-            var dllFullNameGACSearch = Path.Combine(windir, string.Format(@"Microsoft.NET\assembly\GAC_MSIL\{0}", assemblyIdentity.Name));
-            try
-            {
-                foreach (var dll in Directory.EnumerateFiles(dllFullNameGACSearch, "*.dll", SearchOption.AllDirectories))
-                {
-                    // TODO: filter it here
-                    return dll;
-                }
-            }
-            catch (Exception)
-            {
-            }
-
-            if (assemblyIdentity.Name == "CoreLib")
-            {
-                return this.CoreLibPath;
-            }
-
-            if (assemblyIdentity.Name == "mscorlib")
-            {
-                if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
-                {
-                    return this.CoreLibPath;
-                }
-
-                Debug.Assert(false, "you are using mscorlib from .NET");
-
-                return typeof(int).Assembly.Location;
-            }
-
-            Debug.Fail("Not implemented yet");
 
             return null;
         }
