@@ -24,7 +24,7 @@ Cs2Cpp is licensed under the MIT license.
 Quick Start
 -----------
 
-Prerequisite: CMake, .NET 4.6, GCC 5.0+ or Microsoft Visual C++ 2017 Community Edition
+Prerequisite: CMake 2.8+, .NET 4.6.2+, GCC 5.0+ or Microsoft Visual C++ 2017 Community Edition
 
 1) Build Project
 
@@ -53,15 +53,15 @@ cd playground
 4) Generating CoreLib C++ project
 
 ```
-..\Il2Native\Il2Native\bin\Debug\Cs2Cpp.exe /release ..\Il2Native\CoreLib\CoreLib.csproj
+..\Il2Native\Il2Native\bin\Release\Cs2Cpp.exe /release ..\Il2Native\CoreLib\CoreLib.csproj
 ```
 
 5) Compile it
 
 ```
 cd CoreLib
-build_prerequisite_vs2015_release.bat 
-build_vs2015_release.bat
+build_prerequisite_vs2017_release.bat 
+build_vs2017_release.bat
 ```
 
 Now you have compiled CoreLib (mscorelib)
@@ -87,10 +87,42 @@ class X {
 ```
 
 ```
-..\Il2Native\Il2Native\bin\Debug\Cs2Cpp.exe /release HelloWorld.cs /corelib:..\Il2Native\CoreLib\bin\Release\CoreLib.dll
+..\Il2Native\Il2Native\bin\Release\Cs2Cpp.exe /release HelloWorld.cs /corelib:..\Il2Native\CoreLib\bin\Release\CoreLib.dll
 cd HelloWorld
-build_vs2015_release.bat
+build_vs2017_release.bat
 ```
 
 Now you have HelloWorld.exe
 
+
+How to compile CoreCLR and CoreFX projects
+-----------
+
+1) Build Core Lib
+
+```
+Cs2Cpp.exe /release <path_to_git>\coreclr\src\mscorlib\System.Private.CoreLib.csproj
+```
+
+3) Compile any Library project, for example System.Private.Uri
+
+```
+Cs2Cpp.exe /release C:\Dev\Gits\corefx\src\System.Private.Uri\src\System.Private.Uri.csproj /corelib:System.Private.CoreLib.dll /p:Configuration=netstandard2.0-Windows_NT-Release
+```
+
+3) Compile it
+
+First Core library
+
+```
+cd System_Private_CoreLib
+build_prerequisite_vs2017_release.bat 
+build_vs2017_release.bat
+```
+
+Then your targeted library
+
+```
+cd System_Private_Uri
+build_vs2017_release.bat
+```
