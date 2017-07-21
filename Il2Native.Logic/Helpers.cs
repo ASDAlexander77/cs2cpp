@@ -147,6 +147,12 @@ namespace Il2Native.Logic
                     case '\\':
                         n = 'B';
                         break;
+                    case '/':
+                        n = 'S';
+                        break;
+                    case '|':
+                        n = 'C';
+                        break;
                     case '\0':
                         n = 'Z';
                         break;
