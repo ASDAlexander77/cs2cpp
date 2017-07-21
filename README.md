@@ -104,10 +104,10 @@ How to compile CoreCLR and CoreFX projects
 Cs2Cpp.exe /release <path_to_git>\coreclr\src\mscorlib\System.Private.CoreLib.csproj
 ```
 
-3) Compile any Library project, for example System.Private.Uri
+3) Build any Library project, for example System.Private.Uri
 
 ```
-Cs2Cpp.exe /release C:\Dev\Gits\corefx\src\System.Private.Uri\src\System.Private.Uri.csproj /corelib:System.Private.CoreLib.dll /p:Configuration=netstandard2.0-Windows_NT-Release
+Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Private.Uri\src\System.Private.Uri.csproj /corelib:System.Private.CoreLib.dll /p:Configuration=netstandard2.0-Windows_NT-Release
 ```
 
 3) Compile it
