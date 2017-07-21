@@ -230,20 +230,20 @@ namespace CoreLib {
 			switch (formatFlags)
 			{
 			case TypeNameFormatFlags__enum::FormatBasic:
-				*ref = string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
+				*ref = ((string*)nullptr)->CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
 				break;
 			case TypeNameFormatFlags__enum::FormatNamespace:
-				*ref = string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace);
+				*ref = ((string*)nullptr)->CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace);
 				break;
 			case TypeNameFormatFlags__enum::FormatNamespace | TypeNameFormatFlags__enum::FormatFullInst:
-				auto namespaceValue = string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace);
+				auto namespaceValue = ((string*)nullptr)->CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace);
 				if (string::IsNullOrEmpty(namespaceValue))
 				{
-					*ref = string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
+					*ref = ((string*)nullptr)->CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
 				}
 				else
 				{
-					*ref = string::Concat(namespaceValue, u"."_s, string::CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name));
+					*ref = string::Concat(namespaceValue, u"."_s, ((string*)nullptr)->CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name));
 				}
 
 				break;
