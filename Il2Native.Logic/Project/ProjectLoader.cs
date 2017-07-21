@@ -24,7 +24,7 @@ namespace Il2Native.Logic.Project
         private string initialTargets;
         private string defaultTargets;
 
-        public ProjectLoader(IDictionary<string, string> options)
+        public ProjectLoader(IDictionary<string, string> options, string[] args)
         {
             this.Sources = new List<string>();
             this.Content = new List<string>();
@@ -40,6 +40,17 @@ namespace Il2Native.Logic.Project
             this.TargetsDependsOn = new Dictionary<string, List<string>>();
             this.TargetsElements = new Dictionary<string, XElement>();
 #endif
+
+            // set some properties
+            foreach(var arg in args.Where(a => a.StartsWith("property:") || a.StartsWith("p:")))
+            {
+                var indexOfColumn = arg.IndexOf(':');
+                var line = arg.Substring(indexOfColumn + 1);
+                var indexOfEqual = line.IndexOf('=');
+                var name = line.Substring(0, indexOfEqual);
+                var value = line.Substring(indexOfEqual + 1);
+                this.Options[name] = value;
+            }
         }
 
     public IList<string> Sources { get; private set; }
@@ -387,7 +398,7 @@ namespace Il2Native.Logic.Project
                     generateResourcesCode.OutputSourceFilePath = this.FillProperties(element.Attribute("OutputSourceFilePath").Value);
                     generateResourcesCode.AssemblyName = this.FillProperties(element.Attribute("AssemblyName").Value);
                     generateResourcesCode.OmitResourceAccess = true;
-                    generateResourcesCode.DebugOnly = this.Options["Configuration"] != "Release";
+                    generateResourcesCode.DebugOnly = !this.Options["Configuration"].Contains("Release");
                     generateResourcesCode.Execute();
                     break;
 
@@ -599,7 +610,7 @@ namespace Il2Native.Logic.Project
                 this.TargetsElements.Add(name, element);
             }
 #else
-            if (this.Targets.Contains(name) || name == "GenerateResourcesSource" || name == "AnnotateProjectReference")
+            if (this.Targets.Contains(name) || name == "GenerateResourcesSource")
             {
                 return ExecuteTarget(element);
             }

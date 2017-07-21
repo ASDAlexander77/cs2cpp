@@ -71,7 +71,7 @@ namespace Il2Native.Logic
             // loading project or files
             if (this.FirstSource.EndsWith(".csproj"))
             {
-                this.LoadProject(this.FirstSource);
+                this.LoadProject(this.FirstSource, args);
             }
             else
             {
@@ -451,9 +451,9 @@ namespace Il2Native.Logic
             return new MissingAssemblySymbol(identity);
         }
 
-        private void LoadProject(string firstSource)
+        private void LoadProject(string firstSource, string[] args)
         {
-            var projectLoader = new ProjectLoader(this.Options);
+            var projectLoader = new ProjectLoader(this.Options, args);
             if (!projectLoader.Load(firstSource))
             {
                 this.Errors = projectLoader.Errors.ToArray();
@@ -489,7 +489,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            DebugOutput = this.Options["Configuration"] != "Release";
+            DebugOutput = !this.Options["Configuration"].Contains("Release");
 
             this.Sources = projectLoader.Sources.ToArray();
             this.Impl = projectLoader.Content.Where(c => c.EndsWith(".c") || c.EndsWith(".cpp") || c.EndsWith(".cxx") || c.EndsWith(".h") || c.EndsWith(".hpp") || c.EndsWith(".hxx")).ToArray();

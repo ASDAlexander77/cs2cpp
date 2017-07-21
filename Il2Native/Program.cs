@@ -35,16 +35,22 @@ namespace Il2Native
                 Console.WriteLine("  /ref:<file|assembly>[;<file|assembly>..]");
                 Console.WriteLine("                          Reference assembly by name or file");
                 Console.WriteLine(string.Empty);
+                Console.WriteLine("When .CSPROJ provided:");
+                Console.WriteLine("  /property:<name>=<value>");
+                Console.WriteLine("  /p:<name>=<value>       Set or override the specified project-level properties");
+                Console.WriteLine(string.Empty);
                 Console.WriteLine("Example:");
                 Console.WriteLine("  Cs2Cpp file1.cs          Compiles one C# file");
                 Console.WriteLine("  Cs2Cpp proj1.csproj      Compiles C# project");
                 Console.WriteLine("  Cs2Cpp /ref:System.Core file1.cs file2.cs");
                 Console.WriteLine("                          Compiles two C# files using Roslyn compiler");
+                Console.WriteLine("  Cs2Cpp proj1.csproj /p:Configuration=netstandard2.0-Windows_NT-Release");
+                Console.WriteLine("                          Compiles C# project with Configuration 'netstandard2.0-Windows_NT-Release'");
                 return 0;
             }
 
             var processedArgs =
-                args.Select(arg => (arg.StartsWith("/") || arg.StartsWith("-")) ? arg.Substring(1) : arg).ToArray();
+                args.Where(arg => arg.StartsWith("/") || arg.StartsWith("-")).Select(arg => arg.Substring(1)).ToArray();
             var sources = args.Where(arg => (!arg.StartsWith("/") && !arg.StartsWith("-"))).ToArray();
 
             var fileExtension = Path.GetExtension(sources.First());
