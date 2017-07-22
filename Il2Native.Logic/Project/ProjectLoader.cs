@@ -28,6 +28,7 @@ namespace Il2Native.Logic.Project
         {
             this.Sources = new List<string>();
             this.Content = new List<string>();
+            this.ProjectReferences = new List<string>();
             this.References = new List<string>();
             this.ReferencesFromRuntime = new List<string>();
             this.Errors = new List<string>();
@@ -57,6 +58,8 @@ namespace Il2Native.Logic.Project
     public IList<string> Sources { get; private set; }
 
         public IList<string> Content { get; private set; }
+
+        public IList<string> ProjectReferences { get; private set; }
 
         public IList<string> References { get; private set; }
 
@@ -211,12 +214,17 @@ namespace Il2Native.Logic.Project
 
             if (root)
             {
+                foreach (var projecrReference in this.LoadProjectReferencesFromProject(projectExistPath, project))
+                {
+                    this.ProjectReferences.Add(projecrReference);
+                }
+
                 foreach (var reference in this.LoadReferencesFromProject(projectExistPath, project))
                 {
                     this.References.Add(reference);
                 }
 
-                foreach (var reference in this.LoadReferencesFromProject(projectExistPath, project, "ReferenceFromRuntime"))
+                foreach (var reference in this.LoadReferencesFromRuntime(projectExistPath, project))
                 {
                     this.ReferencesFromRuntime.Add(reference);
                 }
@@ -779,14 +787,26 @@ namespace Il2Native.Logic.Project
             return result;
         }
 
-        private string[] LoadReferencesFromProject(string firstSource, XDocument project, string reference = "Reference")
+        private string[] LoadReferencesFromProject(string firstSource, XDocument project)
         {
             var xElement = project.Root;
             if (xElement != null)
             {
-                return xElement.Elements(ns + "ItemGroup").Elements(ns + reference)
+                return xElement.Elements(ns + "ItemGroup").Elements(ns + "Reference")
                     .Select(e => GetReferenceValue(e))
-                    .Union(this.GetReferencesFromProject(firstSource, xElement)).ToArray();
+                    .Union(this.LoadReferencesFromProjectReferences(firstSource, xElement)).ToArray();
+            }
+
+            return null;
+        }
+
+        private string[] LoadReferencesFromRuntime(string firstSource, XDocument project)
+        {
+            var xElement = project.Root;
+            if (xElement != null)
+            {
+                return xElement.Elements(ns + "ItemGroup").Elements(ns + "ReferenceFromRuntime")
+                    .Select(e => GetReferenceValue(e)).ToArray();
             }
 
             return null;
@@ -1318,9 +1338,10 @@ namespace Il2Native.Logic.Project
 
             return filePath;
         }
-        private IEnumerable<string> GetReferencesFromProject(string prjectFullFilePath, XElement xElement)
+
+        private IEnumerable<string> LoadReferencesFromProjectReferences(string prjectFullFilePath, XElement projectRoot)
         {
-            foreach (var projectReference in xElement.Elements(ns + "ItemGroup").Elements(ns + "ProjectReference"))
+            foreach (var projectReference in projectRoot.Elements(ns + "ItemGroup").Elements(ns + "ProjectReference"))
             {
                 var projectFile = this.GetRealFolderFromProject(prjectFullFilePath, projectReference);
                 var project = XDocument.Load(projectFile);
@@ -1330,6 +1351,24 @@ namespace Il2Native.Logic.Project
                 }
 
                 yield return this.GetReferenceFromProjectValue(projectReference, prjectFullFilePath);
+            }
+        }
+
+        private IEnumerable<string> LoadProjectReferencesFromProject(string prjectFullFilePath, XDocument project)
+        {
+            var projectRoot = project.Root;
+            if (projectRoot != null)
+            {
+                foreach (var projectReference in projectRoot.Elements(ns + "ItemGroup").Elements(ns + "ProjectReference"))
+                {
+                    var projectFile = this.GetRealFolderFromProject(prjectFullFilePath, projectReference);
+                    foreach (var subProjectFile in this.LoadProjectReferencesFromProject(projectFile, XDocument.Load(projectFile)))
+                    {
+                        yield return subProjectFile;
+                    }
+
+                    yield return projectFile;
+                }
             }
         }
     }
