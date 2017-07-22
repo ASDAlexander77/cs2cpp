@@ -29,6 +29,7 @@ namespace Il2Native.Logic.Project
             this.Sources = new List<string>();
             this.Content = new List<string>();
             this.References = new List<string>();
+            this.ReferencesFromRuntime = new List<string>();
             this.Errors = new List<string>();
             this.Warnings = new List<string>();
             this.Options = options;
@@ -58,6 +59,8 @@ namespace Il2Native.Logic.Project
         public IList<string> Content { get; private set; }
 
         public IList<string> References { get; private set; }
+
+        public IList<string> ReferencesFromRuntime { get; private set; }
 
         public IList<string> Errors { get; private set; }
 
@@ -172,6 +175,11 @@ namespace Il2Native.Logic.Project
 
             if (projectExistPath == null)
             {
+                if (projectPath.Contains("*"))
+                {
+                    return true;
+                }
+
                 throw new FileNotFoundException(projectPath);
             }
 
@@ -207,6 +215,11 @@ namespace Il2Native.Logic.Project
                 {
                     this.References.Add(reference);
                 }
+
+                foreach (var reference in this.LoadReferencesFromProject(projectExistPath, project, "ReferenceFromRuntime"))
+                {
+                    this.ReferencesFromRuntime.Add(reference);
+                }
             }
 
             return true;
@@ -214,6 +227,9 @@ namespace Il2Native.Logic.Project
 
         private bool BuildWellKnownValues()
         {
+            this.Options["MSBuildRuntimeType"] = "Core";
+            this.Options["MSBuildToolsVersion"] = "14.0";
+
             var disk = "C:";
             var version = "14.0";
             var path = disk + @"\Program Files (x86)\MSBuild";
@@ -332,6 +348,7 @@ namespace Il2Native.Logic.Project
             this.folder = fileInfo.Directory.FullName;
             this.Options[string.Format("MSBuild{0}", name)] = Path.GetFileName(fileInfo.FullName);
             this.Options[string.Format("MSBuild{0}Name", name)] = Path.GetFileNameWithoutExtension(fileInfo.FullName);
+            this.Options[string.Format("MSBuild{0}File", name)] = Path.GetFileName(fileInfo.FullName);
             this.Options[string.Format("MSBuild{0}FullPath", name)] = Helpers.NormalizePath(fileInfo.FullName);
             this.Options[string.Format("MSBuild{0}Extension", name)] = fileInfo.Extension;
             this.Options[string.Format("MSBuild{0}Directory", name)] = Helpers.EnsureTrailingSlash(folder);
@@ -762,12 +779,12 @@ namespace Il2Native.Logic.Project
             return result;
         }
 
-        private string[] LoadReferencesFromProject(string firstSource, XDocument project)
+        private string[] LoadReferencesFromProject(string firstSource, XDocument project, string reference = "Reference")
         {
             var xElement = project.Root;
             if (xElement != null)
             {
-                return xElement.Elements(ns + "ItemGroup").Elements(ns + "Reference")
+                return xElement.Elements(ns + "ItemGroup").Elements(ns + reference)
                     .Select(e => GetReferenceValue(e))
                     .Union(this.GetReferencesFromProject(firstSource, xElement)).ToArray();
             }

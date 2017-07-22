@@ -494,6 +494,10 @@ namespace Il2Native.Logic
             this.Sources = projectLoader.Sources.ToArray();
             this.Impl = projectLoader.Content.Where(c => c.EndsWith(".c") || c.EndsWith(".cpp") || c.EndsWith(".cxx") || c.EndsWith(".h") || c.EndsWith(".hpp") || c.EndsWith(".hxx")).ToArray();
             this.References = projectLoader.References.ToArray();
+            if (projectLoader.ReferencesFromRuntime.Any())
+            {
+                this.CoreLibPath = this.ResolveAssemblyReferense(projectLoader.ReferencesFromRuntime.First());
+            }
         }
 
         /// <summary>
@@ -550,8 +554,9 @@ namespace Il2Native.Logic
             return ResolveAssemblyReferense(dllFileName);
         }
 
-        private string ResolveAssemblyReferense(string dllFileName)
+        private string ResolveAssemblyReferense(string dllFileNameParam)
         {
+            var dllFileName = dllFileNameParam.EndsWith(".dll") ? dllFileNameParam : string.Concat(dllFileNameParam, ".dll");
             if (File.Exists(dllFileName))
             {
                 return new FileInfo(Path.GetFullPath(dllFileName)).FullName;
