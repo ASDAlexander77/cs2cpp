@@ -1317,7 +1317,13 @@ namespace Il2Native.Logic.Project
 
         public string GetRealFolderForProject(string fullProjectFilePath, string referenceFolder)
         {
-            return Path.Combine(Path.GetDirectoryName(fullProjectFilePath), Path.GetDirectoryName(referenceFolder));
+            var path = Path.Combine(Path.GetDirectoryName(fullProjectFilePath), Path.GetDirectoryName(referenceFolder));
+            if (Directory.Exists(path))
+            {
+                return new DirectoryInfo(path).FullName;
+            }
+
+            return path;
         }
 
         private string GetRealFolderFromProject(string projectFullFilePath, XElement projectReference)
