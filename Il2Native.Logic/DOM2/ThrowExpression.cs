@@ -8,44 +8,34 @@ namespace Il2Native.Logic.DOM2
 
     public class ThrowExpression : Expression
     {
-        public Expression ExpressionOpt { get; set; }
+        public Expression Expression { get; set; }
 
         public override Kinds Kind
         {
             get { return Kinds.ThrowExpression; }
         }
 
-        internal void Parse(BoundThrowStatement boundThrowStatement)
+        internal void Parse(BoundThrowExpression boundThrowExpression)
         {
-            if (boundThrowStatement == null)
+            if (boundThrowExpression == null)
             {
                 throw new ArgumentNullException();
             }
 
-            if (boundThrowStatement.ExpressionOpt != null)
-            {
-                this.ExpressionOpt = Deserialize(boundThrowStatement.ExpressionOpt) as Expression;
-            }
+            this.Expression = Deserialize(boundThrowExpression.Expression) as Expression;
         }
 
         internal override void Visit(Action<Base> visitor)
         {
-            if (this.ExpressionOpt != null)
-            {
-                this.ExpressionOpt.Visit(visitor);
-            }
-
+            this.Expression.Visit(visitor);
             base.Visit(visitor);
         }
 
         internal override void WriteTo(CCodeWriterBase c)
         {
             c.TextSpan("throw");
-            if (this.ExpressionOpt != null)
-            {
-                c.WhiteSpace();
-                this.ExpressionOpt.WriteTo(c);
-            }
+            c.WhiteSpace();
+            this.Expression.WriteTo(c);
         }
     }
 }

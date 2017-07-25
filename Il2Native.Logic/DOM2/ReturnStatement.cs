@@ -43,10 +43,17 @@ namespace Il2Native.Logic.DOM2
 
         internal override void WriteTo(CCodeWriterBase c)
         {
-            c.TextSpan("return");
+            if (!(this.ExpressionOpt is ThrowExpression))
+            {
+                c.TextSpan("return");
+                if (this.ExpressionOpt != null)
+                {
+                    c.WhiteSpace();
+                }
+            }
+
             if (this.ExpressionOpt != null)
             {
-                c.WhiteSpace();
                 if (this.ReturnType != null && this.ReturnType.IsValueType && !this.ReturnType.IsReferenceType && this.ExpressionOpt is ThisReference)
                 {
                     c.TextSpan("*");
