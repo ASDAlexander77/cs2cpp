@@ -1381,7 +1381,12 @@ namespace Il2Native.Logic.Project
                 string.Concat("bin\\", this.Options["Configuration"]),
                 string.Concat(Path.GetFileNameWithoutExtension(referencedProjectFilePath), ".dll"));
 
-            return filePath;
+            if (File.Exists(filePath))
+            {
+                return filePath;
+            }
+
+            return Path.GetFileNameWithoutExtension(referencedProjectFilePath);
         }
 
         private IEnumerable<string> LoadReferencesFromProjectReferences(string prjectFullFilePath, XElement projectRoot)
