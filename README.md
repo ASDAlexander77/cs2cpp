@@ -132,6 +132,7 @@ How to compile CoreFX Console project
 
 1) Generating source code for each reference
 
+```
 Cs2Cpp.exe /release <path_to_git>\coreclr\src\mscorlib\System.Private.CoreLib.csproj
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Collections\src\System.Collections.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Diagnostics.Contracts\src\System.Diagnostics.Contracts.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
@@ -143,3 +144,4 @@ Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Text.Encoding.Extensions\src
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Threading\src\System.Threading.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Threading.Tasks\src\System.Threading.Tasks.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Console\src\System.Console.csproj /p:Configuration=netstandard2.0-Windows_NT-Release /corelib:System.Private.CoreLib.dll
+```
