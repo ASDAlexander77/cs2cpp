@@ -409,7 +409,7 @@ namespace Il2Native.Logic.Project
 
         private bool ProcessElement(XElement element)
         {
-            if (!ProjectCondition(element))
+            if (!CheckCondition(element))
             {
                 return true;
             }
@@ -511,7 +511,7 @@ namespace Il2Native.Logic.Project
 
         private void LoadPropertyGroup(XElement element)
         {
-            foreach (var property in element.Elements().Where(i => ProjectCondition(i)))
+            foreach (var property in element.Elements().Where(i => CheckCondition(i)))
             {
                 this.Options[property.Name.LocalName] = this.FillProperties(property.Value);
             }
@@ -519,7 +519,7 @@ namespace Il2Native.Logic.Project
 
         private void LoadItemGroup(XElement element)
         {
-            foreach (var item in element.Elements().Where(i => ProjectCondition(i)))
+            foreach (var item in element.Elements().Where(i => CheckCondition(i)))
             {
                 switch (item.Name.LocalName)
                 {
@@ -803,7 +803,7 @@ namespace Il2Native.Logic.Project
         {
             var result = true;
             var any = false;
-            foreach (var item in element.Elements(ns + "When").Where(i => ProjectCondition(i)))
+            foreach (var item in element.Elements(ns + "When").Where(i => CheckCondition(i)))
             {
                 any = true;
                 foreach (var subItem in item.Elements())
@@ -831,7 +831,7 @@ namespace Il2Native.Logic.Project
             var xElement = project.Root;
             if (xElement != null)
             {
-                return xElement.Elements(ns + "ItemGroup").Elements(ns + "Reference")
+                return xElement.Elements(ns + "ItemGroup").Where(i => CheckCondition(i)).Elements(ns + "Reference")
                     .Select(e => GetReferenceValue(e))
                     .Union(this.LoadReferencesFromProjectReferences(firstSource, xElement)).ToArray();
             }
@@ -844,7 +844,7 @@ namespace Il2Native.Logic.Project
             var xElement = project.Root;
             if (xElement != null)
             {
-                return xElement.Elements(ns + "ItemGroup").Elements(ns + "ReferenceFromRuntime")
+                return xElement.Elements(ns + "ItemGroup").Where(i => CheckCondition(i)).Elements(ns + "ReferenceFromRuntime")
                     .Select(e => GetReferenceValue(e)).ToArray();
             }
 
@@ -873,7 +873,7 @@ namespace Il2Native.Logic.Project
             return possibleFilePath;
         }
 
-        private bool ProjectCondition(XElement element)
+        private bool CheckCondition(XElement element)
         {
             var conditionAttribute = element.Attribute("Condition");
             if (conditionAttribute == null)
@@ -1409,7 +1409,7 @@ namespace Il2Native.Logic.Project
             var projectRoot = project.Root;
             if (projectRoot != null)
             {
-                foreach (var projectReference in projectRoot.Elements(ns + "ItemGroup").Elements(ns + "ProjectReference"))
+                foreach (var projectReference in projectRoot.Elements(ns + "ItemGroup").Where(i => CheckCondition(i)).Elements(ns + "ProjectReference"))
                 {
                     var projectFile = this.GetRealFolderFromProject(prjectFullFilePath, projectReference);
                     foreach (var subProjectFile in this.LoadProjectReferencesFromProject(projectFile, XDocument.Load(projectFile)))

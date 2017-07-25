@@ -209,6 +209,7 @@ namespace Il2Native.Logic
             var resolvedFilePath = this.ResolveAssemblyReferense(assemblyIdentity);
             if (resolvedFilePath == null)
             {
+                Console.WriteLine("Error: Can't resolve reference: " + assemblyIdentity);
                 return;
             }
 
