@@ -46,9 +46,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="args">
         /// </param>
-        public Cs2CGenerator(string[] source, string[] args)
+        public Cs2CGenerator(string[] source, string[] args, string outputFolder)
             : this()
         {
+            this.OutputFolder = outputFolder;
             this.Sources = source;
             this.FirstSource = this.Sources.First();
 
@@ -71,7 +72,7 @@ namespace Il2Native.Logic
             // loading project or files
             if (this.FirstSource.EndsWith(".csproj"))
             {
-                this.LoadProject(this.FirstSource, args);
+                this.LoadProject(this.FirstSource, args, this.OutputFolder);
             }
             else
             {
@@ -79,6 +80,10 @@ namespace Il2Native.Logic
                 this.References = args != null ? args.Where(a => a.StartsWith("ref:")).Select(a => a.Substring("ref:".Length)).ToArray() : null;
             }
         }
+
+        /// <summary>
+        /// </summary>
+        public string OutputFolder { get; set; }
 
         /// <summary>
         /// </summary>
@@ -157,20 +162,25 @@ namespace Il2Native.Logic
             get { return this.sourceMethodByMethodSymbol; }
         }
 
-        public IAssemblySymbol Load()
+        public AssemblyMetadata Compile()
         {
             if (this.Errors != null && this.Errors.Any())
             {
                 return null;
             }
 
-            var assemblyMetadata = this.Compile(this.Sources);
-            if (assemblyMetadata == null)
+            return this.Compile(this.Sources);
+        }
+
+        public IAssemblySymbol CompileAndLoad()
+        {
+            var assemblyMetadata = Compile();
+            if (assemblyMetadata != null)
             {
-                return null;
+                return this.LoadAssemblySymbol(assemblyMetadata);
             }
 
-            return this.LoadAssemblySymbol(assemblyMetadata);
+            return null;
         }
 
         private static object GetAssemblyHashString(AssemblyIdentity assemblyIdentity)
@@ -451,9 +461,11 @@ namespace Il2Native.Logic
             return new MissingAssemblySymbol(identity);
         }
 
-        private void LoadProject(string firstSource, string[] args)
+        private void LoadProject(string firstSource, string[] args, string outputFolder)
         {
-            var projectLoader = new ProjectLoader(this.Options, args);
+            Console.WriteLine(@"Loading project {0}", Path.GetFileNameWithoutExtension(firstSource));
+
+            var projectLoader = new ProjectLoader(this.Options, args, outputFolder);
             if (!projectLoader.Load(firstSource))
             {
                 this.Errors = projectLoader.Errors.ToArray();
@@ -479,6 +491,8 @@ namespace Il2Native.Logic
 
                 return;
             }
+
+            projectLoader.BuildDependantProjects();
 
             if (projectLoader.Warnings.Any())
             {

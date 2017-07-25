@@ -29,8 +29,8 @@ namespace Il2Native.Logic
         {
             var concurrent = true;
 
-            var cs2CGenerator = new Cs2CGenerator(sources, args);
-            var assemblySymbol = cs2CGenerator.Load();     
+            var cs2CGenerator = new Cs2CGenerator(sources, args, outputFolder);
+            var assemblySymbol = cs2CGenerator.CompileAndLoad();     
             if (assemblySymbol == null)
             {
                 return;

@@ -20,12 +20,17 @@ namespace Il2Native.Logic.Project
 
         private static XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
 
+        private string outputFolder;
+        private string[] args;
+
         private string folder;
         private string initialTargets;
         private string defaultTargets;
 
-        public ProjectLoader(IDictionary<string, string> options, string[] args)
+        public ProjectLoader(IDictionary<string, string> options, string[] args, string outputFolder)
         {
+            this.outputFolder = outputFolder;
+            this.args = args;
             this.Sources = new List<string>();
             this.Content = new List<string>();
             this.ProjectReferences = new List<string>();
@@ -112,6 +117,40 @@ namespace Il2Native.Logic.Project
                 return this.defaultTargets;
             }
         }
+
+        public void BuildDependantProjects()
+        {
+            var assemblyName = string.Empty;
+
+            // prebuild references projects
+            foreach (var projectReference in this.ProjectReferences)
+            {
+                assemblyName = GetAssemblyNameFromProject(projectReference);
+                var folder = CCodeFilesGenerator.GetFolderPath(assemblyName, this.outputFolder);
+                if (Directory.Exists(folder))
+                {
+                    Console.WriteLine("Folder for '{0}' exists...skipping build", assemblyName);
+                    continue;
+                }
+
+                Il2Converter.Convert(projectReference, this.outputFolder, args);
+            }
+        }
+
+        public static string GetAssemblyNameFromProject(string projectPath)
+        {
+            var project = XDocument.Load(projectPath);
+            foreach (var projectGroup in project.Root.Elements(ns + "PropertyGroup"))
+            {
+                foreach (var assemblyNameElement in projectGroup.Elements(ns + "AssemblyName"))
+                {
+                    return assemblyNameElement.Value;
+                }
+            }
+
+            return null;
+        }
+
 
         public bool Load(string projectFilePath)
         {

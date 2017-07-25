@@ -25,6 +25,16 @@ namespace Il2Native.Logic
 
         public bool Concurrent { get; set; }
 
+        public static string GetFolderPath(AssemblyIdentity identity, string outputFolder)
+        {
+            return GetFolderPath(identity.Name, outputFolder);
+        }
+
+        public static string GetFolderPath(string name, string outputFolder)
+        {
+            return Path.Combine(outputFolder, name.CleanUpNameAllUnderscore());
+        }
+
         public static void WriteSourceInclude(IndentedTextWriter itw, AssemblyIdentity identity)
         {
             itw.Write("#include \"");
@@ -782,7 +792,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
 
         public void WriteTo(AssemblyIdentity identity, ISet<AssemblyIdentity> references, bool isCoreLib, bool isLibrary, IEnumerable<IEnumerable<CCodeUnit>> units, string outputFolder, string[] impl, AssemblyIdentity coreLibIdentity)
         {
-            this.currentFolder = Path.Combine(outputFolder, identity.Name.CleanUpNameAllUnderscore());
+            this.currentFolder = GetFolderPath(identity, outputFolder);
             if (!Directory.Exists(this.currentFolder))
             {
                 Directory.CreateDirectory(this.currentFolder);
