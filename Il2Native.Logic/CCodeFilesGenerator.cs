@@ -191,7 +191,10 @@ endif()";
 
             if (references.Any())
             {
-                include += " \"${PROJECT_SOURCE_DIR}/../" + coreLibIdentity.Name.CleanUpNameAllUnderscore() + "/bdwgc/include\"";
+                if (coreLibIdentity != null)
+                {
+                    include += " \"${PROJECT_SOURCE_DIR}/../" + coreLibIdentity.Name.CleanUpNameAllUnderscore() + "/bdwgc/include\"";
+                }
             }
             else
             {

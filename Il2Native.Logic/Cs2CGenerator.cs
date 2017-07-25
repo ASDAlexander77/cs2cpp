@@ -536,6 +536,11 @@ namespace Il2Native.Logic
             var added = new HashSet<AssemblyIdentity>();
             if (this.References != null)
             {
+                if (this.References.Any() && string.IsNullOrWhiteSpace(this.CoreLibPath))
+                {
+                    Console.WriteLine("Error: Core library is not provided. Use /corelib in command line to provide it");
+                }
+
                 foreach (var refItem in this.References)
                 {
                     if (File.Exists(refItem))
