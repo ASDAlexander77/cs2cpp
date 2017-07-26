@@ -177,6 +177,7 @@ namespace Il2Native.Logic
             var assemblyMetadata = Compile();
             if (assemblyMetadata != null)
             {
+                this.RemoveUnusedAssemblies(assemblyMetadata);
                 return this.LoadAssemblySymbol(assemblyMetadata);
             }
 
@@ -407,6 +408,13 @@ namespace Il2Native.Logic
             }
 
             return null;
+        }
+
+        private void RemoveUnusedAssemblies(AssemblyMetadata assemblyMetadata)
+        {
+            var referencesInCompiledAssemblies = assemblyMetadata.GetAssembly().AssemblyReferences;
+            var usedAssemblies = this.Assemblies.Where(a => referencesInCompiledAssemblies.Contains(a)).ToArray();
+            this.Assemblies = new HashSet<AssemblyIdentity>(usedAssemblies);
         }
 
         /// <summary>
