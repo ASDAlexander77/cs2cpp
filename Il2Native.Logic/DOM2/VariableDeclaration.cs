@@ -78,7 +78,7 @@ namespace Il2Native.Logic.DOM2
             }
 
             // fix issue with using * in C++ declarations where "," is used
-            var firstAssignmentExpression = (this._statements.First() as ExpressionStatement)?.Expression as AssignmentOperator;
+            var firstAssignmentExpression = (this._statements.FirstOrDefault() as ExpressionStatement)?.Expression as AssignmentOperator;
             if (firstAssignmentExpression != null && !firstAssignmentExpression.ApplyAutoType && firstAssignmentExpression.TypeDeclaration && !firstAssignmentExpression.TypeDeclarationSplit)
             {
                 // mark all AssignmentOperator to put "*" if type is reference

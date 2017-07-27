@@ -1,8 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <StartArguments>/release HelloWorld.cs /corelib:System.Private.CoreLib.dll</StartArguments>
-    <StartWorkingDirectory>C:\Temp\cs2cpp_tries\helloworld\</StartWorkingDirectory>
+    <StartArguments>/release C:\Dev\Gits\corefx\src\System.Runtime\src\System.Runtime.csproj /p:Configuration=netstandard2.0-Windows_NT-Release /corelib:System.Private.CoreLib.dll</StartArguments>
+    <StartWorkingDirectory>C:\Temp\cs2cpp_tries\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <StartArguments>
