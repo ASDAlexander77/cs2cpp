@@ -138,7 +138,7 @@ Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Collections\src\System.Colle
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Diagnostics.Contracts\src\System.Diagnostics.Contracts.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Diagnostics.Tools\src\System.Diagnostics.Tools.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Resources.ResourceManager\src\System.Resources.ResourceManager.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
-Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Runtime.Extensions\src\System.Runtime.Extensions.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
+Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Runtime.Extensions\src\System.Runtime.Extensions.csproj /p:Configuration=netstandard2.0-Windows_NT-Release /corelib:System.Private.CoreLib.dll
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Runtime.InteropServices\src\System.Runtime.InteropServices.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Text.Encoding.Extensions\src\System.Text.Encoding.Extensions.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Threading\src\System.Threading.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
