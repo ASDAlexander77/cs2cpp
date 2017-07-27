@@ -109,7 +109,7 @@
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
-            var outputPath = Path.Combine(OutputPath, assemblyName);
+            var outputPath = Path.Combine(OutputPath, assemblyName.CleanUpNameAllUnderscore());
 
             // remove folder if exists
             if (Directory.Exists(Path.Combine(outputPath, string.Format("__build_win32_{0}", debug ? "debug" : "release"))))
@@ -126,13 +126,13 @@
                 ExecCmd(
                     string.Format("{0}.exe", assemblyName.Replace("-", "_")),
                     string.Empty,
-                    Path.Combine(OutputPath, string.Format("{0}\\__build_win32_{1}\\{2}\\", assemblyName, debug ? "debug" : "release", debug ? "Debug" : "Release")),
+                    Path.Combine(OutputPath, string.Format("{0}\\__build_win32_{1}\\{2}\\", assemblyName.CleanUpNameAllUnderscore(), debug ? "debug" : "release", debug ? "Debug" : "Release")),
                     readOutput: true,
                     returnCode: returnCode);
             }
             else
             {
-                Assert.IsTrue(File.Exists(string.Format("{0}\\__build_win32_{1}\\{2}\\{0}.exe", assemblyName, debug ? "debug" : "release", debug ? "Debug" : "Release")));
+                Assert.IsTrue(File.Exists(string.Format("{0}\\__build_win32_{1}\\{2}\\{0}.exe", assemblyName.CleanUpNameAllUnderscore(), debug ? "debug" : "release", debug ? "Debug" : "Release")));
             }
         }
 
@@ -271,7 +271,7 @@
             {
                 try
                 {
-                    Directory.Delete(Path.Combine(OutputPath, fileName), true);
+                    Directory.Delete(Path.Combine(OutputPath, fileName.CleanUpNameAllUnderscore()), true);
                     break;
                 }
                 catch (Exception ex)
