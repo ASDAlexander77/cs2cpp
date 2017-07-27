@@ -145,3 +145,16 @@ Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Threading\src\System.Threadi
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Threading.Tasks\src\System.Threading.Tasks.csproj /p:Configuration=netstandard2.0-Windows_NT-Release
 Cs2Cpp.exe /release <path_to_git>\corefx\src\System.Console\src\System.Console.csproj /p:Configuration=netstandard2.0-Windows_NT-Release /corelib:System.Private.CoreLib.dll
 ```
+
+2) Generate source code for "Hello World" executable 
+
+```
+Cs2Cpp.exe /release helloworld.cs /ref:System.Console /corelib:System.Private.CoreLib
+```
+
+3) Compile all projects one by one calling
+
+```
+cd <System.*>
+build_vs2017_release.bat
+```

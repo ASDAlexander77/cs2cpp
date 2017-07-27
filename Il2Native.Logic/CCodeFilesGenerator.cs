@@ -739,7 +739,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     if (!stubs)
                     {
                         var typeFullNameClean = firstUnit.Type.GetTypeFullName().CleanUpName();
-                        var varName = string.Concat("HEADER_", typeFullNameClean, stubs ? "_STUBS" : string.Empty);
+                        var varName = string.Concat("HEADER_FOR_TEMPLATES_", typeFullNameClean, stubs ? "_STUBS" : string.Empty);
                         itw.WriteLine("#ifndef {0}", varName);
                         itw.WriteLine("#define {0}", varName);
                     }
