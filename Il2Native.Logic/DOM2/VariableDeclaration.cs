@@ -77,6 +77,17 @@ namespace Il2Native.Logic.DOM2
                 this.Local.WriteTo(c);
             }
 
+            // fix issue with using * in C++ declarations where "," is used
+            var firstAssignmentExpression = (this._statements.First() as ExpressionStatement)?.Expression as AssignmentOperator;
+            if (firstAssignmentExpression != null && !firstAssignmentExpression.ApplyAutoType && firstAssignmentExpression.TypeDeclaration && !firstAssignmentExpression.TypeDeclarationSplit)
+            {
+                // mark all AssignmentOperator to put "*" if type is reference
+                foreach (var assignmentExpression in this._statements.Skip(1).OfType<ExpressionStatement>().Select(s => s.Expression).OfType<AssignmentOperator>().Where(a => a.IsReference))
+                {
+                    assignmentExpression.ApplyCppReference = true;
+                }
+            }
+
             var any = false;
             foreach (var statement in this._statements)
             {

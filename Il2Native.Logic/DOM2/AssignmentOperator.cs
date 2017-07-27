@@ -32,6 +32,8 @@ namespace Il2Native.Logic.DOM2
 
         public bool IsOut { get; set; }
 
+        public bool ApplyCppReference { get; set; }
+
         internal void Parse(BoundAssignmentOperator boundAssignmentOperator)
         {
             base.Parse(boundAssignmentOperator);
@@ -107,6 +109,11 @@ namespace Il2Native.Logic.DOM2
                     this.Left.WriteTo(c);
                     c.EndStatement();
                 }
+            }
+
+            if (this.ApplyCppReference)
+            {
+                c.TextSpan("*");
             }
 
             var rightType = this.Right.Type;
