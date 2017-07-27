@@ -412,9 +412,24 @@ namespace Il2Native.Logic
 
         private void RemoveUnusedAssemblies(AssemblyMetadata assemblyMetadata)
         {
-            var referencesInCompiledAssemblies = assemblyMetadata.GetAssembly().AssemblyReferences;
+            var referencesInCompiledAssemblies = assemblyMetadata.GetAssembly().AssemblyReferences.Union(this.EnumerateAllReferencesInAssembly(assemblyMetadata.GetAssembly().AssemblyReferences));
             var usedAssemblies = this.Assemblies.Where(a => referencesInCompiledAssemblies.Contains(a)).ToArray();
             this.Assemblies = new HashSet<AssemblyIdentity>(usedAssemblies);
+        }
+
+        private IEnumerable<AssemblyIdentity> EnumerateAllReferencesInAssembly(ImmutableArray<AssemblyIdentity> assemblyIdenties)
+        {
+            var added = new HashSet<AssemblyIdentity>();
+            var assemblies = new List<MetadataImageReference>();
+            foreach (var assemblyIdentity in assemblyIdenties)
+            {
+                this.AddAsseblyReference(assemblies, added, assemblyIdentity);
+            }
+
+            foreach (var identity in added)
+            {
+                yield return identity;
+            }
         }
 
         /// <summary>
