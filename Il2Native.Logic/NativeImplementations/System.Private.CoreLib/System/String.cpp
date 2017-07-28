@@ -53,20 +53,27 @@ namespace CoreLib { namespace System {
     // Method : string.this[int].get
     char16_t String::get_Chars(int32_t index)
     {
-        throw 3221274624U;
+		return ((char16_t*)&this->_firstChar)[index];
     }
     
     // Method : string.Length.get
     int32_t String::get_Length()
     {
-        throw 3221274624U;
+		return this->m_stringLength;
     }
     
     // Method : string.FastAllocateString(int)
     string* String::FastAllocateString(int32_t length)
     {
-        throw 3221274624U;
-    }
+		auto size = sizeof(string) + (length + 1) * sizeof(char16_t);
+#ifdef NDEBUG
+		auto str = new ((size_t)size) string;
+#else
+		auto str = new ((size_t)size, __FILE__, __LINE__) string;
+#endif
+		str->m_stringLength = length;
+		return str;
+	}
     
     // Method : string.IsFastSort()
     bool String::IsFastSort()
