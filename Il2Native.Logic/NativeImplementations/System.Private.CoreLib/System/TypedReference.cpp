@@ -19,7 +19,7 @@ namespace CoreLib { namespace System {
     void TypedReference::InternalSetTypedReference(void* target, object* value)
     {
 		auto trPtr = (_::TypedReference*)target;
-		trPtr->Value = (void*)value;
+		trPtr->Value.INTPTR_VALUE_FIELD = (void*)value;
 	}
 
 }}
