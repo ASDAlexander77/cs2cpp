@@ -5,7 +5,7 @@ namespace CoreLib { namespace System {
     // Method : System.AppDomain.nGetAppXFlags()
     _::AppDomain_APPX_FLAGS__enum AppDomain::nGetAppXFlags()
     {
-        throw 3221274624U;
+		return _::AppDomain_APPX_FLAGS__enum::APPX_FLAGS_INITIALIZED;
     }
     
     // Method : System.AppDomain.nGetAssemblies(bool)

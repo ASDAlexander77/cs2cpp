@@ -5,7 +5,7 @@ namespace CoreLib { namespace System {
     // Method : System.CLRConfig.GetConfigBoolValue(string)
     bool CLRConfig::GetConfigBoolValue(string* configSwitchName)
     {
-        throw 3221274624U;
+		return false;
     }
 
 }}
