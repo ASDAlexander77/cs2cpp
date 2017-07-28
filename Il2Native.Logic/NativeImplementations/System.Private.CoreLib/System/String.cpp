@@ -58,7 +58,7 @@ namespace CoreLib { namespace System {
 			throw __new<_::InvalidOperationException>();
 		}
 
-		if (index >= this->m_stringLength())
+		if (index >= this->m_stringLength)
 		{
 			throw __new<_::IndexOutOfRangeException>();
 		}
