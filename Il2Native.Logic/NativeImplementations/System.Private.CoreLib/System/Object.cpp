@@ -5,13 +5,13 @@ namespace CoreLib { namespace System {
     // Method : object.GetType()
     _::Type* Object::GetType()
     {
-        throw 3221274624U;
+		return this->__get_type();
     }
     
     // Method : object.MemberwiseClone()
     object* Object::MemberwiseClone()
     {
-        throw 3221274624U;
+		return this->__clone();
     }
 
 }}

@@ -35,13 +35,13 @@ namespace CoreLib { namespace System { namespace Runtime { namespace CompilerSer
     // Method : System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(object)
     int32_t RuntimeHelpers::GetHashCode(object* o)
     {
-        throw 3221274624U;
+		return o->__hash();
     }
     
     // Method : System.Runtime.CompilerServices.RuntimeHelpers.Equals(object, object)
     bool RuntimeHelpers::Equals(object* o1, object* o2)
     {
-        throw 3221274624U;
+		return o1->__equals(o2);
     }
     
     // Method : System.Runtime.CompilerServices.RuntimeHelpers.EnsureSufficientExecutionStack()

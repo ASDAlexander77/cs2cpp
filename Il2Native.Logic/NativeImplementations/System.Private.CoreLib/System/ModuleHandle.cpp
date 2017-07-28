@@ -37,11 +37,14 @@ namespace CoreLib { namespace System {
     {
         throw 3221274624U;
     }
+
+	// TODO: temporary solution
+	_::RuntimeType rmt;
     
     // Method : System.ModuleHandle.GetModuleType(System.Reflection.RuntimeModule, System.Runtime.CompilerServices.ObjectHandleOnStack)
     void ModuleHandle::GetModuleType(_::Reflection::RuntimeModule* handle, _::Runtime::CompilerServices::ObjectHandleOnStack type)
     {
-        throw 3221274624U;
+		*((_::RuntimeType**)(void*)type.m_ptr) = &rmt;
     }
     
     // Method : System.ModuleHandle.GetPEKind(System.Reflection.RuntimeModule, out int, out int)

@@ -2,46 +2,51 @@
 
 namespace CoreLib { namespace System { 
     namespace _ = ::CoreLib::System;
+
+	int32_t _exitCode = 0;
+
     // Method : System.Environment.TickCount.get
     int32_t Environment::get_TickCount()
     {
-        throw 3221274624U;
-    }
+		std::chrono::steady_clock::time_point t0;
+		auto now = std::chrono::steady_clock::now() - t0;
+		return now.count() / 100;
+	}
     
     // Method : System.Environment._Exit(int)
     void Environment::_Exit(int32_t exitCode)
     {
-        throw 3221274624U;
+		std::exit(exitCode);
     }
     
     // Method : System.Environment.ExitCode.get
     int32_t Environment::get_ExitCode()
     {
-        throw 3221274624U;
+		return _exitCode;
     }
     
     // Method : System.Environment.ExitCode.set
     void Environment::set_ExitCode(int32_t value)
     {
-        throw 3221274624U;
+		_exitCode = value;
     }
     
     // Method : System.Environment.FailFast(string)
     void Environment::FailFast(string* message)
     {
-        throw 3221274624U;
+		std::quick_exit(-1);
     }
     
     // Method : System.Environment.FailFast(string, System.Exception)
     void Environment::FailFast(string* message, _::Exception* exception)
     {
-        throw 3221274624U;
-    }
+		std::quick_exit(-1);
+	}
     
     // Method : System.Environment.GetProcessorCount()
     int32_t Environment::GetProcessorCount()
     {
-        throw 3221274624U;
+		return std::thread::hardware_concurrency();
     }
     
     // Method : System.Environment.GetCommandLineArgsNative()
@@ -65,7 +70,7 @@ namespace CoreLib { namespace System {
     // Method : System.Environment.CurrentProcessorNumber.get
     int32_t Environment::get_CurrentProcessorNumber()
     {
-        throw 3221274624U;
+		return std::thread::hardware_concurrency();
     }
 
 }}

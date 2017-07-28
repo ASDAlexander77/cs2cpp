@@ -17,7 +17,11 @@ namespace CoreLib {
 			// Method : System.Threading.WaitHandle.WaitMultiple(System.Threading.WaitHandle[], int, bool, bool)
 			int32_t WaitHandle::WaitMultiple(__array<WaitHandle*>* waitHandles, int32_t millisecondsTimeout, bool exitContext, bool WaitAll)
 			{
-				throw 0xC000C000;
+#ifndef GC_PTHREADS
+				return ::WaitForMultipleObjects(waitHandles->_length, (HANDLE*)&waitHandles->_data[0], WaitAll ? 1 : 0, millisecondsTimeout);
+#else
+#error NOT IMPLEMENTED YET
+#endif
 			}
 
 			// Method : System.Threading.WaitHandle.SignalAndWaitOne(Microsoft.Win32.SafeHandles.SafeWaitHandle, Microsoft.Win32.SafeHandles.SafeWaitHandle, int, bool, bool)

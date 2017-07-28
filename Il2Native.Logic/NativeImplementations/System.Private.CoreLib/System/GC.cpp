@@ -41,25 +41,25 @@ namespace CoreLib { namespace System {
     // Method : System.GC.GetGenerationWR(System.IntPtr)
     int32_t GC::GetGenerationWR(_::IntPtr handle)
     {
-        throw 3221274624U;
+		return 0;
     }
     
     // Method : System.GC.GetTotalMemory()
     int64_t GC::GetTotalMemory()
     {
-        throw 3221274624U;
+		return GC_get_total_bytes();
     }
     
     // Method : System.GC._Collect(int, int)
     void GC::_Collect(int32_t generation, int32_t mode)
     {
-        throw 3221274624U;
+		GC_gcollect();
     }
     
     // Method : System.GC.GetMaxGeneration()
     int32_t GC::GetMaxGeneration()
     {
-        throw 3221274624U;
+		return 0;
     }
     
     // Method : System.GC._CollectionCount(int, int)
@@ -89,25 +89,28 @@ namespace CoreLib { namespace System {
     // Method : System.GC.GetGeneration(object)
     int32_t GC::GetGeneration(object* obj)
     {
-        throw 3221274624U;
+		return 0;
     }
     
     // Method : System.GC._WaitForPendingFinalizers()
     void GC::_WaitForPendingFinalizers()
     {
-        throw 3221274624U;
-    }
+		while (GC_should_invoke_finalizers())
+		{
+			::CoreLib::System::Threading::Thread::Sleep(10);
+		}
+	}
     
     // Method : System.GC._SuppressFinalize(object)
     void GC::_SuppressFinalize(object* o)
     {
-        throw 3221274624U;
+		GC_REGISTER_FINALIZER((void *)o, nullptr, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
     }
     
     // Method : System.GC._ReRegisterForFinalize(object)
     void GC::_ReRegisterForFinalize(object* o)
     {
-        throw 3221274624U;
+		GC_REGISTER_FINALIZER((void *)o, __finalizer, (void *)nullptr, (GC_finalization_proc *)nullptr, (void **)nullptr);
     }
     
     // Method : System.GC._GetAllocatedBytesForCurrentThread()

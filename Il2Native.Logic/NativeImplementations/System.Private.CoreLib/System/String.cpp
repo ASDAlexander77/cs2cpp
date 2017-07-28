@@ -53,6 +53,16 @@ namespace CoreLib { namespace System {
     // Method : string.this[int].get
     char16_t String::get_Chars(int32_t index)
     {
+		if (index < 0)
+		{
+			throw __new<_::InvalidOperationException>();
+		}
+
+		if (index >= this->m_stringLength())
+		{
+			throw __new<_::IndexOutOfRangeException>();
+		}
+
 		return ((char16_t*)&this->_firstChar)[index];
     }
     

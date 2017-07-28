@@ -41,25 +41,31 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.GetCorElementType(System.RuntimeType)
     _::Reflection::CorElementType__enum RuntimeTypeHandle::GetCorElementType(_::RuntimeType* type)
     {
-        throw 3221274624U;
+		_::Reflection::CorElementType__enum(((__runtimetype_info*)(void*)type->m_handle)->__cor_element_type);
     }
+
+	// TODO: temporary solution
+	_::Reflection::RuntimeAssembly ra;
     
     // Method : System.RuntimeTypeHandle.GetAssembly(System.RuntimeType)
     _::Reflection::RuntimeAssembly* RuntimeTypeHandle::GetAssembly(_::RuntimeType* type)
     {
-        throw 3221274624U;
+		return &ra;
     }
     
+	// TODO: temporary solution
+	_::Reflection::RuntimeModule rm;
+
     // Method : System.RuntimeTypeHandle.GetModule(System.RuntimeType)
     _::Reflection::RuntimeModule* RuntimeTypeHandle::GetModule(_::RuntimeType* type)
     {
-        throw 3221274624U;
-    }
+		return &rm;
+	}
     
     // Method : System.RuntimeTypeHandle.GetBaseType(System.RuntimeType)
     _::RuntimeType* RuntimeTypeHandle::GetBaseType(_::RuntimeType* type)
     {
-        throw 3221274624U;
+		return ((__runtimetype_info*)(void*)type->m_handle)->__base_type;
     }
     
     // Method : System.RuntimeTypeHandle.GetAttributes(System.RuntimeType)
@@ -71,7 +77,7 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.GetElementType(System.RuntimeType)
     _::RuntimeType* RuntimeTypeHandle::GetElementType(_::RuntimeType* type)
     {
-        throw 3221274624U;
+		return ((__runtimetype_info*)(void*)type->m_handle)->__element_type;
     }
     
     // Method : System.RuntimeTypeHandle.CompareCanonicalHandles(System.RuntimeType, System.RuntimeType)
@@ -131,8 +137,9 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.GetGCHandle(System.RuntimeTypeHandle, System.Runtime.InteropServices.GCHandleType)
     _::IntPtr RuntimeTypeHandle::GetGCHandle(_::RuntimeTypeHandle handle, _::Runtime::InteropServices::GCHandleType__enum type)
     {
-        throw 3221274624U;
-    }
+		auto gcHandle = __init<_::Runtime::InteropServices::GCHandle>(handle.m_type, type);
+		return gcHandle.m_handle;
+	}
     
     // Method : System.RuntimeTypeHandle.GetNumVirtuals(System.RuntimeType)
     int32_t RuntimeTypeHandle::GetNumVirtuals(_::RuntimeType* type)
@@ -179,8 +186,30 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.ConstructName(System.RuntimeTypeHandle, System.TypeNameFormatFlags, System.Runtime.CompilerServices.StringHandleOnStack)
     void RuntimeTypeHandle::ConstructName(_::RuntimeTypeHandle handle, _::TypeNameFormatFlags__enum formatFlags, _::Runtime::CompilerServices::StringHandleOnStack retString)
     {
-        throw 3221274624U;
-    }
+		auto ref = (string**)(void*)retString.m_ptr;
+
+		switch (formatFlags)
+		{
+		case TypeNameFormatFlags__enum::FormatBasic:
+			*ref = ((string*)nullptr)->CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
+			break;
+		case TypeNameFormatFlags__enum::FormatNamespace:
+			*ref = ((string*)nullptr)->CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace);
+			break;
+		case TypeNameFormatFlags__enum::FormatNamespace | TypeNameFormatFlags__enum::FormatFullInst:
+			auto namespaceValue = ((string*)nullptr)->CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__namespace);
+			if (string::IsNullOrEmpty(namespaceValue))
+			{
+				*ref = ((string*)nullptr)->CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name);
+			}
+			else
+			{
+				*ref = string::Concat(namespaceValue, u"."_s, ((string*)nullptr)->CtorCharPtr((char16_t*)((__runtimetype_info*)(void*)handle.m_type->m_handle)->__name));
+			}
+
+			break;
+		}
+	}
     
     // Method : System.RuntimeTypeHandle._GetUtf8Name(System.RuntimeType)
     void* RuntimeTypeHandle::_GetUtf8Name(_::RuntimeType* type)

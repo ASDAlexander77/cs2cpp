@@ -11,14 +11,81 @@ namespace CoreLib { namespace System {
     // Method : System.Array.Copy(System.Array, int, System.Array, int, int, bool)
     void Array::Copy(_::Array* sourceArray, int32_t sourceIndex, _::Array* destinationArray, int32_t destinationIndex, int32_t length, bool reliable)
     {
-        throw 3221274624U;
-    }
+		if (length == 0)
+		{
+			return;
+		}
+
+		if (sourceArray == nullptr || destinationArray == nullptr)
+		{
+			throw __new<_::ArgumentNullException>();
+		}
+
+		if (length < 0)
+		{
+			throw __new<_::InvalidOperationException>();
+		}
+
+		if (sourceIndex < 0 || destinationIndex < 0)
+		{
+			throw __new<_::IndexOutOfRangeException>();
+		}
+
+		if (sourceIndex + length > sourceArray->get_Length() || destinationIndex + length > destinationArray->get_Length())
+		{
+			throw __new<_::IndexOutOfRangeException>();
+		}
+
+		_::TypedReference elemref;
+
+		int32_t index = sourceIndex;
+		sourceArray->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
+		auto pSrc = (int8_t*)(void*)elemref.Value;
+
+		index = destinationIndex;
+		destinationArray->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
+		auto pDest = (int8_t*)(void*)elemref.Value;
+
+		auto elementSize = sourceArray->__array_element_size();
+		std::memcpy(pDest, pSrc, length * elementSize);
+	}
     
     // Method : System.Array.Clear(System.Array, int, int)
     void Array::Clear(_::Array* array, int32_t index, int32_t length)
     {
-        throw 3221274624U;
-    }
+		if (length == 0)
+		{
+			return;
+		}
+
+		if (array == nullptr)
+		{
+			throw __new<_::ArgumentNullException>();
+		}
+
+		if (length < 0)
+		{
+			throw __new<_::InvalidOperationException>();
+		}
+
+		if (index < 0)
+		{
+			throw __new<_::IndexOutOfRangeException>();
+		}
+
+		if (index + length > array->get_Length())
+		{
+			throw __new<_::IndexOutOfRangeException>();
+		}
+
+		_::TypedReference elemref;
+
+		array->InternalGetReference(static_cast<void*>(&elemref), 1, &index);
+		auto pSrc = (int8_t*)(void*)elemref.Value;
+
+		auto elementSize = array->__array_element_size();
+		std::memset(pSrc, 0, length * elementSize);
+	}
     
     // Method : System.Array.InternalGetReference(void*, int, int*)
     void Array::InternalGetReference(void* elemRef, int32_t rank, int32_t* pIndices)
@@ -29,8 +96,22 @@ namespace CoreLib { namespace System {
     // Method : System.Array.InternalSetValue(void*, object)
     void Array::InternalSetValue(void* target, object* value)
     {
-        throw 3221274624U;
-    }
+		if (target == nullptr)
+		{
+			throw __new<_::ArgumentNullException>(u"target"_s);
+		}
+
+		auto typedRef = reinterpret_cast<_::TypedReference*>(target);
+
+		try
+		{
+			((__methods_table*)(void*)(typedRef->Type))->__unbox_to((void*)typedRef->Value, value);
+		}
+		catch (_::InvalidCastException*)
+		{
+			throw __new<_::ArgumentException>();
+		}
+	}
     
     // Method : System.Array.Length.get
     int32_t Array::get_Length()

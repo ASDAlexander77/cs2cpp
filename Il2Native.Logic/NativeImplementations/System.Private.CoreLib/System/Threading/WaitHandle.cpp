@@ -5,8 +5,12 @@ namespace CoreLib { namespace System { namespace Threading {
     // Method : System.Threading.WaitHandle.WaitOneNative(System.Runtime.InteropServices.SafeHandle, uint, bool, bool)
     int32_t WaitHandle::WaitOneNative(::CoreLib::System::Runtime::InteropServices::SafeHandle* waitableSafeHandle, uint32_t millisecondsTimeout, bool hasThreadAffinity, bool exitContext)
     {
-        throw 3221274624U;
-    }
+#ifndef GC_PTHREADS
+		return ::WaitForSingleObject((HANDLE)waitableSafeHandle->handle.ToInt32(), millisecondsTimeout);
+#else
+#error NOT IMPLEMENTED YET
+#endif
+	}
     
     // Method : System.Threading.WaitHandle.WaitMultiple(System.Threading.WaitHandle[], int, bool, bool)
     int32_t WaitHandle::WaitMultiple(__array<_::WaitHandle*>* waitHandles, int32_t millisecondsTimeout, bool exitContext, bool WaitAll)
