@@ -27,7 +27,7 @@ namespace CoreLib { namespace System {
 			return false;
 		}
 
-		return object::ReferenceEquals(left->get_UnderlyingSystemType(), right->get_UnderlyingSystemType()));
+		return object::ReferenceEquals(left->get_UnderlyingSystemType(), right->get_UnderlyingSystemType());
 	}
     
     // Method : System.Type.operator !=(System.Type, System.Type)
@@ -43,7 +43,7 @@ namespace CoreLib { namespace System {
 			return true;
 		}
 
-		return !object::ReferenceEquals(left->get_UnderlyingSystemType(), right->get_UnderlyingSystemType()));
+		return !object::ReferenceEquals(left->get_UnderlyingSystemType(), right->get_UnderlyingSystemType());
 	}
 
 }}
