@@ -41,7 +41,7 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.GetCorElementType(System.RuntimeType)
     _::Reflection::CorElementType__enum RuntimeTypeHandle::GetCorElementType(_::RuntimeType* type)
     {
-		_::Reflection::CorElementType__enum(((__runtimetype_info*)(void*)type->m_handle)->__cor_element_type);
+		return _::Reflection::CorElementType__enum(((__runtimetype_info*)(void*)type->m_handle)->__cor_element_type);
     }
 
 	// TODO: temporary solution
