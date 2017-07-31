@@ -35,7 +35,7 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.CreateInstanceForAnotherGenericParameter(System.RuntimeType, System.RuntimeType)
     object* RuntimeTypeHandle::CreateInstanceForAnotherGenericParameter(_::RuntimeType* type, _::RuntimeType* genericParameter)
     {
-        throw 3221274624U;
+		return (((__runtimetype_info*)(void*)type->m_handle)->_methods_table->__new();
     }
     
     // Method : System.RuntimeTypeHandle.GetCorElementType(System.RuntimeType)
@@ -168,7 +168,8 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.IsInterface(System.RuntimeType)
     bool RuntimeTypeHandle::IsInterface(_::RuntimeType* type)
     {
-        throw 3221274624U;
+		// TODO: finish it
+		return false;
     }
     
     // Method : System.RuntimeTypeHandle._IsVisible(System.RuntimeTypeHandle)
@@ -220,7 +221,8 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.CanCastTo(System.RuntimeType, System.RuntimeType)
     bool RuntimeTypeHandle::CanCastTo(_::RuntimeType* type, _::RuntimeType* target)
     {
-        throw 3221274624U;
+		// TODO: finish it
+		return false;
     }
     
     // Method : System.RuntimeTypeHandle.GetDeclaringType(System.RuntimeType)
@@ -269,7 +271,7 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.Instantiate(System.RuntimeTypeHandle, System.IntPtr*, int, System.Runtime.CompilerServices.ObjectHandleOnStack)
     void RuntimeTypeHandle::Instantiate(_::RuntimeTypeHandle handle, _::IntPtr* pInst, int32_t numGenericArgs, _::Runtime::CompilerServices::ObjectHandleOnStack type)
     {
-        throw 3221274624U;
+		*(void**)type.m_ptr.INTPTR_VALUE_FIELD = (void*)_typeof<void>();
     }
     
     // Method : System.RuntimeTypeHandle.MakeArray(System.RuntimeTypeHandle, int, System.Runtime.CompilerServices.ObjectHandleOnStack)
@@ -305,7 +307,7 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.HasInstantiation(System.RuntimeType)
     bool RuntimeTypeHandle::HasInstantiation(_::RuntimeType* type)
     {
-        throw 3221274624U;
+		return ((__runtimetype_info*)(void*)type->m_handle)->__is_generic_type_definition;
     }
     
     // Method : System.RuntimeTypeHandle.GetGenericTypeDefinition(System.RuntimeTypeHandle, System.Runtime.CompilerServices.ObjectHandleOnStack)
@@ -323,7 +325,7 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.IsGenericVariable(System.RuntimeType)
     bool RuntimeTypeHandle::IsGenericVariable(_::RuntimeType* type)
     {
-        throw 3221274624U;
+		return false;
     }
     
     // Method : System.RuntimeTypeHandle.GetGenericVariableIndex(System.RuntimeType)

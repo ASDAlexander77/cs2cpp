@@ -1127,6 +1127,7 @@ public:
 struct __runtimetype_info
 {
 	// TODO: finish it
+	__methods_table* _methods_table;
 	////::CoreLib::System::Reflection::RuntimeAssembly* __assembly;
 	////::CoreLib::System::Reflection::RuntimeModule* __module;
 	const char16_t* __name;

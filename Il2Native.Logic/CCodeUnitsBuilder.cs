@@ -253,6 +253,7 @@ namespace Il2Native.Logic
                     {
                         Initializers =
                         {
+                            new TypeOfOperator { SourceType = new TypeExpression { Type = type }, MethodsTable = true },
                             // Name
                             new Literal { Value = ConstantValue.Create(type.Name), CppConstString = true },
                             new Literal { Value = ConstantValue.Create(type.ContainingNamespace != null ? type.ContainingNamespace.GetNamespaceFullName() : string.Empty), CppConstString = true },
