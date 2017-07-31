@@ -256,7 +256,14 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.GetInstantiation(System.RuntimeTypeHandle, System.Runtime.CompilerServices.ObjectHandleOnStack, bool)
     void RuntimeTypeHandle::GetInstantiation(_::RuntimeTypeHandle type, _::Runtime::CompilerServices::ObjectHandleOnStack types, bool fAsRuntimeTypeArray)
     {
-        ////throw 3221274624U;
+		auto arity = ((__runtimetype_info*)(void*)type.m_type->m_handle)->__arity;
+		auto array_of_types = __array<::CoreLib::System::Type*>::__new_array(arity);
+		for (auto i = 0; i < array_of_types->operator int32_t(); i++)
+		{
+			array_of_types->_data[i] = _typeof<void>();
+		}
+
+		*(void**)types.m_ptr.INTPTR_VALUE_FIELD = (void*)array_of_types;
     }
     
     // Method : System.RuntimeTypeHandle.Instantiate(System.RuntimeTypeHandle, System.IntPtr*, int, System.Runtime.CompilerServices.ObjectHandleOnStack)

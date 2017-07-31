@@ -1133,6 +1133,7 @@ struct __runtimetype_info
 	const char16_t* __namespace;
 	int32_t __cor_element_type;
 	bool __is_generic_type_definition;
+	int32_t __arity;
 	::CoreLib::System::RuntimeType* __base_type;
 	::CoreLib::System::RuntimeType* __element_type;
 };

@@ -258,6 +258,7 @@ namespace Il2Native.Logic
                             new Literal { Value = ConstantValue.Create(type.ContainingNamespace != null ? type.ContainingNamespace.GetNamespaceFullName() : string.Empty), CppConstString = true },
                             new Literal { Value = ConstantValue.Create((int)type.GetCorElementType()) },
                             new Literal { Value = ConstantValue.Create(type.IsGenericType) },
+                            new Literal { Value = ConstantValue.Create(type.Arity) },
                             GetRuntimeTypeReferenceOrNullForType(type.BaseType),
                             GetRuntimeTypeReferenceOrNullForType(type.GetElementType())
                         }
