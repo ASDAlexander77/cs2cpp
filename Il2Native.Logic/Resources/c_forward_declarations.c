@@ -1086,6 +1086,17 @@ inline _CLASS* __box_ref_t(T* t)
 	return __box(*t);
 }
 
+template <typename T, typename _CLASS = typename valuetype_to_class<T>::type> inline _CLASS* __box_ref_t(::CoreLib::System::NullableT1<T>* t)
+{
+	if (!t->get_HasValue())
+	{
+		return nullptr;
+	}
+
+	// we do not need to call __new here as it already constructed
+	return __box(t->GetValueOrDefault());
+}
+
 // unbox - to address
 template <typename T>
 inline void __unbox_to_t(T* t, object* val)
