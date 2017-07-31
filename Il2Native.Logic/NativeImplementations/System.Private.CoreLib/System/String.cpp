@@ -130,7 +130,7 @@ namespace CoreLib { namespace System {
     // Method : string.InternalUseRandomizedHashing()
     bool String::InternalUseRandomizedHashing()
     {
-        throw 3221274624U;
+		return false;
     }
     
     // Method : string.ReplaceInternal(string, string)

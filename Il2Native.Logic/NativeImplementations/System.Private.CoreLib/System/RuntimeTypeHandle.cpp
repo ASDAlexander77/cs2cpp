@@ -256,7 +256,7 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.GetInstantiation(System.RuntimeTypeHandle, System.Runtime.CompilerServices.ObjectHandleOnStack, bool)
     void RuntimeTypeHandle::GetInstantiation(_::RuntimeTypeHandle type, _::Runtime::CompilerServices::ObjectHandleOnStack types, bool fAsRuntimeTypeArray)
     {
-        throw 3221274624U;
+        ////throw 3221274624U;
     }
     
     // Method : System.RuntimeTypeHandle.Instantiate(System.RuntimeTypeHandle, System.IntPtr*, int, System.Runtime.CompilerServices.ObjectHandleOnStack)
@@ -310,7 +310,7 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.IsGenericTypeDefinition(System.RuntimeType)
     bool RuntimeTypeHandle::IsGenericTypeDefinition(_::RuntimeType* type)
     {
-        throw 3221274624U;
+		return ((__runtimetype_info*)(void*)type->m_handle)->__is_generic_type_definition;
     }
     
     // Method : System.RuntimeTypeHandle.IsGenericVariable(System.RuntimeType)
@@ -328,7 +328,7 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.ContainsGenericVariables(System.RuntimeType)
     bool RuntimeTypeHandle::ContainsGenericVariables(_::RuntimeType* handle)
     {
-        throw 3221274624U;
+		return false;
     }
     
     // Method : System.RuntimeTypeHandle.SatisfiesConstraints(System.RuntimeType, System.IntPtr*, int, System.IntPtr*, int, System.RuntimeType)

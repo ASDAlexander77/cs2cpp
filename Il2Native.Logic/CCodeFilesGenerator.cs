@@ -801,11 +801,10 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 Directory.CreateDirectory(this.currentFolder);
             }
 
-            if (isCoreLib)
-            {
-                this.ExtractCoreLibImpl(identity);
-            }
+            // extract from Resources if any
+            this.ExtractImpl(identity);
 
+            // copy/paste from project
             if (impl != null && impl.Any())
             {
                 this.PopulateImpl(impl);
@@ -824,12 +823,30 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             this.WriteBuildFiles(identity, references, !isLibrary, coreLibIdentity);
         }
 
-        private void ExtractCoreLibImpl(AssemblyIdentity identity)
+        private void ExtractImpl(AssemblyIdentity identity)
         {
             var isCoreLibName = identity.IsCoreLibAssembly();
             var implFolder = Path.Combine(this.currentFolder, "impl");
+
+            byte[] bytes;
+
+            switch(identity.Name)
+            {
+                case "CoreLib":
+                    bytes = Resources.CoreLibImpl;
+                    break;
+                case "System.Private.CoreLib":
+                    bytes = Resources.System_Private_CoreLibImpl;
+                    break;
+                case "System.Console":
+                    bytes = Resources.System_ConsoleImpl;
+                    break;
+                default:
+                    return;
+            }
+
             // extract Impl file
-            using (var archive = new ZipArchive(new MemoryStream(isCoreLibName ? Resources.CoreLibImpl : Resources.System_Private_CoreLibImpl)))
+            using (var archive = new ZipArchive(new MemoryStream(bytes)))
             {
                 foreach (var file in archive.Entries)
                 {
@@ -850,7 +867,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                     if (!File.Exists(completeFileName))
                     {
                         file.ExtractToFile(completeFileName);
-                       if (!isCoreLibName)
+                        if (!isCoreLibName)
                         {
                             // replace CoreLib.h with <Identity.h>
                             var text = File.ReadAllText(completeFileName).Replace("#include \"CoreLib.h\"", string.Format("#include \"{0}.h\"", identity.Name));

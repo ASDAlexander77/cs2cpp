@@ -201,6 +201,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\c_declarations.c" />
+    <None Include="Resources\System_ConsoleImpl.zip" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\c_include.c" />
@@ -237,6 +238,8 @@
     <Content Include="NativeImplementations\CoreLib\System\Threading\Thread.cpp" />
     <Content Include="NativeImplementations\CoreLib\System\Threading\WaitHandle.cpp" />
     <Content Include="NativeImplementations\CoreLib\System\TypedReference.cpp" />
+    <Content Include="NativeImplementations\System.Console\Interop_Kernel32.cpp" />
+    <Content Include="NativeImplementations\System.Console\Interop_User32.cpp" />
     <Content Include="Resources\Android.mk" />
     <Content Include="Resources\Application.mk" />
     <Content Include="Resources\intrin_template.h" />
@@ -393,7 +396,8 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>powershell.exe -nologo -noprofile -command "&amp; { if (Test-Path '$(ProjectDir)Resources\CoreLibImpl.zip') { Remove-Item '$(ProjectDir)Resources\CoreLibImpl.zip' } Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('$(ProjectDir)NativeImplementations\CoreLib', '$(ProjectDir)Resources\CoreLibImpl.zip'); }"
-powershell.exe -nologo -noprofile -command "&amp; { if (Test-Path '$(ProjectDir)Resources\System_Private_CoreLibImpl.zip') { Remove-Item '$(ProjectDir)Resources\System_Private_CoreLibImpl.zip' } Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('$(ProjectDir)NativeImplementations\System.Private.CoreLib', '$(ProjectDir)Resources\System_Private_CoreLibImpl.zip'); }"</PreBuildEvent>
+powershell.exe -nologo -noprofile -command "&amp; { if (Test-Path '$(ProjectDir)Resources\System_Private_CoreLibImpl.zip') { Remove-Item '$(ProjectDir)Resources\System_Private_CoreLibImpl.zip' } Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('$(ProjectDir)NativeImplementations\System.Private.CoreLib', '$(ProjectDir)Resources\System_Private_CoreLibImpl.zip'); }"
+powershell.exe -nologo -noprofile -command "&amp; { if (Test-Path '$(ProjectDir)Resources\System_ConsoleImpl.zip') { Remove-Item '$(ProjectDir)Resources\System_ConsoleImpl.zip' } Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::CreateFromDirectory('$(ProjectDir)NativeImplementations\System.Console', '$(ProjectDir)Resources\System_ConsoleImpl.zip'); }"</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

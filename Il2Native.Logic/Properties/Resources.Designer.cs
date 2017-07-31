@@ -235,19 +235,7 @@ namespace Il2Native.Logic.Properties {
                 return ((byte[])(obj));
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] System_Private_CoreLibImpl
-        {
-            get
-            {
-                object obj = ResourceManager.GetObject("System_Private_CoreLibImpl", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to // Decimals
         ///extern &quot;C&quot; double pow(double value, double power);
@@ -265,12 +253,12 @@ namespace Il2Native.Logic.Properties {
         ///
         ///::CoreLib::System::IntPtr _interlocked_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value)
         ///{
-        ///	return __init&lt;::CoreLib::System::IntPtr&gt;(InterlockedExchangePointer((void* volatile*)&amp;location1-&gt;_value, value._value));
+        ///	return __init&lt;::CoreLib::System::IntPtr&gt;(InterlockedExchangePointer((void* volatile*)&amp;location1-&gt;INTPTR_VALUE_FIELD, value.INTPTR_VALUE_FIELD));
         ///}
         ///
         ///::CoreLib::System::IntPtr _interlocked_compare_exchange(::CoreLib::System::IntPtr volatile* location1, ::CoreLib::System::IntPtr value, ::CoreLib::System::IntPtr comparand)
         ///{
-        ///	return __init&lt;::CoreLib::System::IntPtr&gt;(InterlockedCom [rest of string was truncated]&quot;;.
+        ///	return __init&lt;::CoreLib::System [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string intrin {
             get {
@@ -313,12 +301,31 @@ namespace Il2Native.Logic.Properties {
         ///	return -operand;
         ///}
         ///
-        ///template &lt; typename D, typename S &gt;
-        /// [rest of string was truncated]&quot;;.
+        ///template &lt; typename D, typename S &gt;        /// [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string overflow {
             get {
                 return ResourceManager.GetString("overflow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] System_ConsoleImpl {
+            get {
+                object obj = ResourceManager.GetObject("System_ConsoleImpl", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] System_Private_CoreLibImpl {
+            get {
+                object obj = ResourceManager.GetObject("System_Private_CoreLibImpl", resourceCulture);
+                return ((byte[])(obj));
             }
         }
     }

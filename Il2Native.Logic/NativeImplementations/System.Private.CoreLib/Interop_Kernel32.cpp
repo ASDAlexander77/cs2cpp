@@ -155,13 +155,13 @@ namespace CoreLib {
     // Method : Interop.Kernel32.GetUserPreferredUILanguages(uint, out uint, char[], ref uint)
     bool Interop_Kernel32::GetUserPreferredUILanguages_Out_Ref(uint32_t dwFlags, uint32_t& pulNumLanguages, __array<char16_t>* pwszLanguagesBuffer, uint32_t& pcchLanguagesBuffer)
     {
-        throw 3221274624U;
+		return ::GetUserPreferredUILanguages(dwFlags, (PULONG) &pulNumLanguages, (PZZWSTR) &(pwszLanguagesBuffer->_data[0]), (PULONG) &pcchLanguagesBuffer);
     }
     
     // Method : Interop.Kernel32.GetLocaleInfoEx(string, uint, void*, int)
     int32_t Interop_Kernel32::GetLocaleInfoEx(string* lpLocaleName, uint32_t LCType, void* lpLCData, int32_t cchData)
     {
-        throw 3221274624U;
+		return ::GetLocaleInfoEx(lpLocaleName != nullptr ? (wchar_t*)&(lpLocaleName->FIRST_CHAR_FIELD) : nullptr, LCType, (wchar_t*)lpLCData, cchData);
     }
     
     // Method : Interop.Kernel32.EnumSystemLocalesEx(Interop.Kernel32.EnumLocalesProcEx, uint, void*, System.IntPtr)
