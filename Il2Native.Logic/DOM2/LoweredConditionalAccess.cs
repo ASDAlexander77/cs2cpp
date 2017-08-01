@@ -7,6 +7,7 @@ namespace Il2Native.Logic.DOM2
     using DOM.Implementations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
+    using System.Collections.Immutable;
 
     public class LoweredConditionalAccess : Expression
     {
@@ -69,13 +70,19 @@ namespace Il2Native.Logic.DOM2
                         }
                 });
 
+            var method = new MethodImpl { Name = "__is_null" };
+            method.Parameters = ImmutableArray.Create("Object".ToSystemType().ToParameter("p1"));
+            var call = new Call { Method = method };
+            call.Arguments.Add(local);
+
             block.Statements.Add(
                 new ReturnStatement
                 {
                     ExpressionOpt =
                         new ConditionalOperator
                         {
-                            Condition =
+                            Condition = call
+                            /*
                                 new BinaryOperator
                                 {
                                     Left = (Type.TypeKind == TypeKind.TypeParameter) ? (Expression) new Cast
@@ -86,7 +93,7 @@ namespace Il2Native.Logic.DOM2
                                     } : local,
                                     Right = new Literal { Value = ConstantValue.Create(null) },
                                     OperatorKind = BinaryOperatorKind.NotEqual
-                                },
+                                }*/,
                             Consequence = this.WhenNotNull,
                             Alternative = this.WhenNullOpt ?? new DefaultOperator { Type = Type }
                         }

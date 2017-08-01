@@ -17,7 +17,7 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.CreateInstance(System.RuntimeType, bool, ref bool, ref System.RuntimeMethodHandleInternal)
     object* RuntimeTypeHandle::CreateInstance_Ref_Ref(_::RuntimeType* type, bool publicOnly, bool& canBeCached, _::RuntimeMethodHandleInternal& ctor)
     {
-        throw 3221274624U;
+		return ((__runtimetype_info*)(void*)type->m_handle)->_methods_table->__new();
     }
     
     // Method : System.RuntimeTypeHandle.CreateCaInstance(System.RuntimeType, System.IRuntimeMethodInfo)
@@ -29,13 +29,13 @@ namespace CoreLib { namespace System {
     // Method : System.RuntimeTypeHandle.Allocate(System.RuntimeType)
     object* RuntimeTypeHandle::Allocate(_::RuntimeType* type)
     {
-        throw 3221274624U;
+		return ((__runtimetype_info*)(void*)type->m_handle)->_methods_table->__new();
     }
     
     // Method : System.RuntimeTypeHandle.CreateInstanceForAnotherGenericParameter(System.RuntimeType, System.RuntimeType)
     object* RuntimeTypeHandle::CreateInstanceForAnotherGenericParameter(_::RuntimeType* type, _::RuntimeType* genericParameter)
     {
-		return (((__runtimetype_info*)(void*)type->m_handle)->_methods_table->__new();
+		return ((__runtimetype_info*)(void*)type->m_handle)->_methods_table->__new();
     }
     
     // Method : System.RuntimeTypeHandle.GetCorElementType(System.RuntimeType)

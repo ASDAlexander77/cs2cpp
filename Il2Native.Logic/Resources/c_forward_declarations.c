@@ -389,9 +389,9 @@ public:
 	}
 };
 
-template <typename T> struct __unbound_generic_type
-{
-};
+template <typename T> struct __unbound_generic_type;
+template< typename T > struct is_unbound_generic_type : std::false_type {};
+template< typename T > struct is_unbound_generic_type<__unbound_generic_type<T>> : std::true_type {};
 
 // Default
 template <typename T>
@@ -416,6 +416,12 @@ template <typename T>
 constexpr typename std::enable_if<std::is_void<T>::value, T>::type __default()
 {
 	return;
+}
+
+template <typename T, typename S>
+inline typename std::enable_if<is_unbound_generic_type<T>::value, T>::type __default()
+{
+	throw __new<::CoreLib::System::InvalidOperationException>();
 }
 
 template< typename T >
@@ -822,7 +828,13 @@ inline typename std::enable_if<!is_value_type<T>::value, C>::type interface_cast
 }
 
 template <typename C, typename T>
-inline typename std::enable_if<is_value_type<T>::value, C>::type interface_cast(T& t)
+inline typename std::enable_if<is_primitive_type<T>::value, C>::type interface_cast(T& t)
+{
+	return __box(t)->operator C();
+}
+
+template <typename C, typename T>
+inline typename std::enable_if<is_struct_type<T>::value, C>::type interface_cast(T& t)
 {
 	return t->operator C();
 }

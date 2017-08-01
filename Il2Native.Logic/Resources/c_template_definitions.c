@@ -35,6 +35,14 @@ template <typename T>
 template <typename T>
 __runtimetype_info __pointer<T>::__rt_info = { _typeMT<::CoreLib::System::Reflection::Pointer>(), nullptr, nullptr, 15, false, 0, _runtime_typeof<::CoreLib::System::Reflection::Pointer>(), _runtime_typeof<T>() };
 
+// Unbound generic type
+template <typename T>
+::CoreLib::System::RuntimeType __unbound_generic_type<T>::__type = ::CoreLib::System::RuntimeType(&__unbound_generic_type<T>::__rt_info);
+
+template <typename T>
+__runtimetype_info __unbound_generic_type<T>::__rt_info = { nullptr, nullptr, nullptr, 0, false, 0, _runtime_typeof<object>(), nullptr };
+
+
 // Array
 template <typename T>
 int32_t  __array<T>::__array_element_size()

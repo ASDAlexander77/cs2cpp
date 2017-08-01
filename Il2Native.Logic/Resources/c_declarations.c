@@ -161,6 +161,12 @@ inline typename std::enable_if<is_interface_type<S>::value && is_class_type<D>::
 	return object_cast(s);
 }
 
+template <typename D, typename S>
+inline D constrained(__unbound_generic_type<S> s)
+{
+	throw __new<::CoreLib::System::InvalidOperationException>();
+}
+
 // Pointers
 template <typename T>
 inline void* __ptr_add(void* p, T off)
@@ -240,6 +246,12 @@ template<typename T>
 struct type_holder<__pointer<T>> { typedef __pointer<T> type; };
 
 template <typename T> struct __pointer
+{
+	static ::CoreLib::System::RuntimeType __type;
+	static __runtimetype_info __rt_info;
+};
+
+template <typename T> struct __unbound_generic_type : public object
 {
 	static ::CoreLib::System::RuntimeType __type;
 	static __runtimetype_info __rt_info;
@@ -1195,6 +1207,18 @@ template < typename T >
 inline bool operator == (std::nullptr_t p2, ::CoreLib::System::NullableT1<T>& p1)
 {
 	return !p1.get_HasValue();
+}
+
+template < typename T, class = typename std::enable_if<!is_value_type<T>::value, T>::type >
+inline bool __is_null(T t)
+{
+	return t != nullptr;
+}
+
+template < typename T, class = typename std::enable_if<is_value_type<T>::value, T>::type >
+inline bool __is_null(T& t)
+{
+	return false;
 }
 
 // string helpers
