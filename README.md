@@ -158,3 +158,29 @@ Cs2Cpp.exe /release helloworld.cs /ref:System.Console /corelib:System.Private.Co
 cd <System.*>
 build_vs2017_release.bat
 ```
+
+How to compile CoreRT project
+-----------
+
+0) Prepare CoreRT to build, run 
+
+```
+init-tools.cmd
+build.cmd
+```
+
+This should generate 'AsmOffsets.cs'. Ensure it is placed into folder <path_to_git>\corert\bin\obj\Native\Windows_NT.x64.Release\Runtime\Full\ 
+
+1) Build Core Lib
+
+```
+Cs2Cpp.exe /release <path_to_git>\corert\src\System.Private.CoreLib\src\System.Private.CoreLib.csproj /p:Platform=x64
+```
+
+2) Compile it
+
+```
+cd System_Private_CoreLib
+build_prerequisite_vs2017_release.bat 
+build_vs2017_release.bat
+```
