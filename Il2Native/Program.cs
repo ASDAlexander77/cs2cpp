@@ -21,7 +21,7 @@ namespace Il2Native
             if (args.Length == 0)
             {
                 Console.WriteLine("C# Native, https://csnative.codeplex.com/");
-                Console.WriteLine("C# to C++ transpiler");
+             riteLine("C# to C++ transpiler");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Usage: CS2CPP [options] file");
                 Console.WriteLine(string.Empty);
@@ -65,7 +65,7 @@ namespace Il2Native
                 sources.Count() > 1)
             {
                 Console.WriteLine("WARNING!");
-                Console.WriteLine("You can use only one CSPROJ file at a time.");
+             Console.WriteLine("You can use only one CSPROJ file at a time.");
                 return 1;
             }
 
