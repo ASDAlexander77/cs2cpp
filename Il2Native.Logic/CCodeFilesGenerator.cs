@@ -232,7 +232,7 @@ endif()";
             // build mingw32 DEBUG .bat
             var buildMinGw32 = @"md __build_mingw32_<%build_type_lowercase%>
 cd __build_mingw32_<%build_type_lowercase%>
-cmake -f .. -G ""MinGW Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+cmake .. -G ""MinGW Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 mingw32-make -j 8 2>log";
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_mingw32_debug", ".bat"))))
@@ -250,7 +250,7 @@ mingw32-make -j 8 2>log";
             // build linux clang DEBUG .sh
             var buildUnix = @"mkdir __build_linux_<%build_type_lowercase%>
 cd __build_linux_<%build_type_lowercase%>
-cmake -f .. -G ""Unix Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+cmake .. -G ""Unix Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 make -j 8 2>log";
 
             using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_gcc_debug", ".sh"))))
@@ -282,7 +282,7 @@ make -j 8 2>log";
 cd __build_linux_<%build_type_lowercase%>
 export CC=clang
 export CXX=clang++
-cmake -f .. -G ""Unix Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+cmake .. -G ""Unix Makefiles"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 make -j 8 2>log
 ";
 
@@ -313,7 +313,7 @@ make -j 8 2>log
             // build Visual Studio 2015 .bat
             var buildVS2015 = @"md __build_win32_<%build_type_lowercase%>
 cd __build_win32_<%build_type_lowercase%>
-cmake -f .. -G ""Visual Studio 14"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+cmake .. -G ""Visual Studio 14"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
 
@@ -332,7 +332,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             // build Visual Studio 2017 .bat
             var buildVS2017 = @"md __build_win32_<%build_type_lowercase%>
 cd __build_win32_<%build_type_lowercase%>
-cmake -f .. -G ""Visual Studio 15"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+cmake .. -G ""Visual Studio 15"" -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS150COMNTOOLS%\..\..\VC\Auxiliary\Build\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:15.0";
 
@@ -351,7 +351,7 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             // build Visual Studio .bat
             var buildVS2015TegraAndroid = @"md __build_vs_android_<%build_type_lowercase%>
 cd __build_vs_android_<%build_type_lowercase%>
-cmake -f .. -G ""Visual Studio 14"" -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_SYSTEM_NAME=Android -Wno-dev
+cmake .. -G ""Visual Studio 14"" -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_SYSTEM_NAME=Android -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
 
@@ -370,11 +370,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             // prerequisite
             if (!references.Any())
             {
-                var buildMinGw32Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
-if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
+                var buildMinGw32Bdwgc = @"if not exist bdwgc (git clone -b v8.0.4 --single-branch https://github.com/ivmai/bdwgc.git bdwgc)
+if not exist bdwgc/libatomic_ops (git clone https://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_mingw32_<%build_type_lowercase%>_bdwgc 
 cd __build_mingw32_<%build_type_lowercase%>_bdwgc
-cmake -f ../bdwgc -G ""MinGW Makefiles"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_USE_WIN32_THREADS_INIT=ON -Wno-dev
+cmake ../bdwgc -G ""MinGW Makefiles"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_USE_WIN32_THREADS_INIT=ON -Wno-dev
 mingw32-make -j 8 2>log
 ";
 
@@ -394,7 +394,7 @@ mingw32-make -j 8 2>log
 if [ ! -d bdwgc/libatomic_ops ]; then (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops); fi
 mkdir __build_linux_<%build_type_lowercase%>_bdwgc 
 cd __build_linux_<%build_type_lowercase%>_bdwgc
-cmake -f ../bdwgc -G ""Unix Makefiles"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_USE_WIN32_THREADS_INIT=OFF -Wno-dev
+cmake ../bdwgc -G ""Unix Makefiles"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_USE_WIN32_THREADS_INIT=OFF -Wno-dev
 make -j 8 2>log";
 
                 using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_gcc_debug", ".sh"))))
@@ -427,7 +427,7 @@ mkdir __build_linux_<%build_type_lowercase%>_bdwgc
 cd __build_linux_<%build_type_lowercase%>_bdwgc
 export CC=clang
 export CXX=clang++
-cmake -f ../bdwgc -G ""Unix Makefiles"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_USE_WIN32_THREADS_INIT=OFF -Wno-dev
+cmake ../bdwgc -G ""Unix Makefiles"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_USE_WIN32_THREADS_INIT=OFF -Wno-dev
 make -j 8 2>log";
 
                 using (var itw = new IndentedTextWriter(new StreamWriter(this.GetPath("build_prerequisite_clang_debug", ".sh"))))
@@ -455,11 +455,11 @@ make -j 8 2>log";
                 }
 
                 // build Visual Studio 2015 .bat
-                var buildVS2015Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
-if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
+                var buildVS2015Bdwgc = @"if not exist bdwgc (git clone -b v8.0.4 --single-branch https://github.com/ivmai/bdwgc.git bdwgc)
+if not exist bdwgc/libatomic_ops (git clone https://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_win32_<%build_type_lowercase%>_bdwgc
 cd __build_win32_<%build_type_lowercase%>_bdwgc
-cmake -f ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+cmake ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
 
@@ -476,11 +476,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 }
 
                 // build Visual Studio 2017 .bat
-                var buildVS2017Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
-if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
+                var buildVS2017Bdwgc = @"if not exist bdwgc (git clone -b v8.0.4 --single-branch https://github.com/ivmai/bdwgc.git bdwgc)
+if not exist bdwgc/libatomic_ops (git clone https://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_win32_<%build_type_lowercase%>_bdwgc
 cd __build_win32_<%build_type_lowercase%>_bdwgc
-cmake -f ../bdwgc -G ""Visual Studio 15"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
+cmake ../bdwgc -G ""Visual Studio 15"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
 call ""%VS150COMNTOOLS%\..\..\VC\Auxiliary\Build\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:15.0";
 
@@ -497,11 +497,11 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 }
 
                 // build Visual Studio .bat
-                var buildVS2015TegraAndroidBdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
-if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
+                var buildVS2015TegraAndroidBdwgc = @"if not exist bdwgc (git clone -b v8.0.4 --single-branch https://github.com/ivmai/bdwgc.git bdwgc)
+if not exist bdwgc/libatomic_ops (git clone https://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_vs_android_<%build_type_lowercase%>_bdwgc
 cd __build_vs_android_<%build_type_lowercase%>_bdwgc
-cmake -f ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=OFF -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_SYSTEM_NAME=Android -Wno-dev
+cmake ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=OFF -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_SYSTEM_NAME=Android -Wno-dev
 call ""%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat"" amd64_x86
 MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win32"" /toolsversion:14.0";
 
