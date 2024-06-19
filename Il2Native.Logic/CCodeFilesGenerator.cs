@@ -370,8 +370,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
             // prerequisite
             if (!references.Any())
             {
-                var buildMinGw32Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
-if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
+                var buildMinGw32Bdwgc = @"if not exist bdwgc (git clone -b v8.0.4 --single-branch https://github.com/ivmai/bdwgc.git bdwgc)
+if not exist bdwgc/libatomic_ops (git clone https://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_mingw32_<%build_type_lowercase%>_bdwgc 
 cd __build_mingw32_<%build_type_lowercase%>_bdwgc
 cmake ../bdwgc -G ""MinGW Makefiles"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_USE_WIN32_THREADS_INIT=ON -Wno-dev
@@ -455,8 +455,8 @@ make -j 8 2>log";
                 }
 
                 // build Visual Studio 2015 .bat
-                var buildVS2015Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
-if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
+                var buildVS2015Bdwgc = @"if not exist bdwgc (git clone -b v8.0.4 --single-branch https://github.com/ivmai/bdwgc.git bdwgc)
+if not exist bdwgc/libatomic_ops (git clone https://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_win32_<%build_type_lowercase%>_bdwgc
 cd __build_win32_<%build_type_lowercase%>_bdwgc
 cmake ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
@@ -476,8 +476,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 }
 
                 // build Visual Studio 2017 .bat
-                var buildVS2017Bdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
-if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
+                var buildVS2017Bdwgc = @"if not exist bdwgc (git clone -b v8.0.4 --single-branch https://github.com/ivmai/bdwgc.git bdwgc)
+if not exist bdwgc/libatomic_ops (git clone https://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_win32_<%build_type_lowercase%>_bdwgc
 cd __build_win32_<%build_type_lowercase%>_bdwgc
 cmake ../bdwgc -G ""Visual Studio 15"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=ON -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -Wno-dev
@@ -497,8 +497,8 @@ MSBuild ALL_BUILD.vcxproj /m:8 /p:Configuration=<%build_type%> /p:Platform=""Win
                 }
 
                 // build Visual Studio .bat
-                var buildVS2015TegraAndroidBdwgc = @"if not exist bdwgc (git clone git://github.com/ivmai/bdwgc.git bdwgc)
-if not exist bdwgc/libatomic_ops (git clone git://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
+                var buildVS2015TegraAndroidBdwgc = @"if not exist bdwgc (git clone -b v8.0.4 --single-branch https://github.com/ivmai/bdwgc.git bdwgc)
+if not exist bdwgc/libatomic_ops (git clone https://github.com/ivmai/libatomic_ops.git bdwgc/libatomic_ops)
 md __build_vs_android_<%build_type_lowercase%>_bdwgc
 cd __build_vs_android_<%build_type_lowercase%>_bdwgc
 cmake ../bdwgc -G ""Visual Studio 14"" -Denable_threads:BOOL=ON -Denable_parallel_mark:BOOL=ON -Denable_cplusplus:BOOL=OFF -Denable_gcj_support:BOOL=ON -DCMAKE_BUILD_TYPE=<%build_type%> -DCMAKE_SYSTEM_NAME=Android -Wno-dev
